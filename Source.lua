@@ -5756,4 +5756,613 @@ local Library do
     end
 end
 
+--// Built-in ESP extension
+--// The original HighLib implementation above is intentionally kept intact.
+--// This extension only adds one permanent page to every Window.
+do
+    local ESPPlayers = game:GetService("Players")
+    local ESPRunService = game:GetService("RunService")
+    local ESPLocalPlayer = ESPPlayers.LocalPlayer
+
+    Library.Flags = Library.Flags or {}
+    Library._HighLibESP = Library._HighLibESP or {
+        Cache = {},
+        Characters = {},
+        Windows = {},
+        PreviewCallbacks = {},
+    }
+
+    local ESPState = Library._HighLibESP
+    local ESPBoxColor = Color3.fromRGB(255, 72, 72)
+    local ESPWhite = Color3.fromRGB(255, 255, 255)
+    local ESPHealthColor = Color3.fromRGB(65, 220, 110)
+
+    local function ESPFlag(name, default)
+        local value = Library.Flags[name]
+        if value == nil then
+            return default
+        end
+        return value
+    end
+
+    local function ESPDrawing(kind, properties)
+        if type(Drawing) ~= "table" or type(Drawing.new) ~= "function" then
+            return nil
+        end
+
+        local success, object = pcall(Drawing.new, kind)
+        if not success or not object then
+            return nil
+        end
+
+        for property, value in properties do
+            pcall(function()
+                object[property] = value
+            end)
+        end
+
+        return object
+    end
+
+    local function ESPRemoveDrawing(object)
+        if object then
+            pcall(function()
+                object:Remove()
+            end)
+        end
+    end
+
+    local function ESPHide(entry)
+        for _, object in entry.Drawings do
+            if object then
+                object.Visible = false
+            end
+        end
+
+        if entry.Highlight then
+            entry.Highlight.Enabled = false
+        end
+    end
+
+    local function ESPCreatePlayer(player)
+        if player == ESPLocalPlayer or ESPState.Cache[player] then
+            return
+        end
+
+        local entry = {
+            Player = player,
+            Drawings = {
+                Box = ESPDrawing("Square", {
+                    Visible = false,
+                    Filled = false,
+                    Thickness = 1,
+                    Color = ESPBoxColor,
+                }),
+                HealthBack = ESPDrawing("Line", {
+                    Visible = false,
+                    Thickness = 3,
+                    Color = Color3.fromRGB(0, 0, 0),
+                }),
+                Health = ESPDrawing("Line", {
+                    Visible = false,
+                    Thickness = 2,
+                    Color = ESPHealthColor,
+                }),
+                HealthText = ESPDrawing("Text", {
+                    Visible = false,
+                    Center = true,
+                    Outline = true,
+                    Color = ESPWhite,
+                }),
+                Name = ESPDrawing("Text", {
+                    Visible = false,
+                    Center = true,
+                    Outline = true,
+                    Color = ESPWhite,
+                }),
+                Distance = ESPDrawing("Text", {
+                    Visible = false,
+                    Center = true,
+                    Outline = true,
+                    Color = ESPWhite,
+                }),
+                Tracer = ESPDrawing("Line", {
+                    Visible = false,
+                    Thickness = 1,
+                    Color = ESPBoxColor,
+                }),
+            },
+        }
+
+        pcall(function()
+            local highlight = Instance.new("Highlight")
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.FillTransparency = 0.78
+            highlight.OutlineTransparency = 0.1
+            highlight.Enabled = false
+            highlight.Parent = workspace
+            entry.Highlight = highlight
+        end)
+
+        ESPState.Cache[player] = entry
+
+        local function onCharacter(character)
+            ESPState.Characters[player] = character
+            if entry.Highlight then
+                entry.Highlight.Adornee = character
+            end
+        end
+
+        player.CharacterAdded:Connect(onCharacter)
+        player.CharacterRemoving:Connect(function()
+            ESPState.Characters[player] = nil
+            ESPHide(entry)
+        end)
+
+        if player.Character then
+            onCharacter(player.Character)
+        end
+    end
+
+    local function ESPRemovePlayer(player)
+        local entry = ESPState.Cache[player]
+        if not entry then
+            return
+        end
+
+        for _, object in entry.Drawings do
+            ESPRemoveDrawing(object)
+        end
+
+        if entry.Highlight then
+            entry.Highlight:Destroy()
+        end
+
+        ESPState.Cache[player] = nil
+        ESPState.Characters[player] = nil
+    end
+
+    for _, player in ESPPlayers:GetPlayers() do
+        ESPCreatePlayer(player)
+    end
+
+    ESPPlayers.PlayerAdded:Connect(ESPCreatePlayer)
+    ESPPlayers.PlayerRemoving:Connect(ESPRemovePlayer)
+
+    local function ESPUpdate()
+        local camera = workspace.CurrentCamera
+        if not camera then
+            return
+        end
+
+        if not ESPFlag("ESP_Enabled", false) then
+            for _, entry in ESPState.Cache do
+                ESPHide(entry)
+            end
+            return
+        end
+
+        local maxDistance = ESPFlag("ESP_MaxDistance", 2500)
+        local teamCheck = ESPFlag("ESP_TeamCheck", false)
+
+        for player, entry in ESPState.Cache do
+            local character = ESPState.Characters[player]
+            local root = character and character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+            local valid = root and humanoid and humanoid.Health > 0
+
+            if valid and teamCheck and player.Team == ESPLocalPlayer.Team then
+                valid = false
+            end
+
+            if valid and (camera.CFrame.Position - root.Position).Magnitude > maxDistance then
+                valid = false
+            end
+
+            if not valid then
+                ESPHide(entry)
+                continue
+            end
+
+            local top = camera:WorldToViewportPoint((root.CFrame * CFrame.new(0, 3, 0)).Position)
+            local bottom = camera:WorldToViewportPoint((root.CFrame * CFrame.new(0, -3.5, 0)).Position)
+
+            if top.Z <= 0 or bottom.Z <= 0 then
+                ESPHide(entry)
+                continue
+            end
+
+            local height = math.abs(top.Y - bottom.Y)
+            local width = height * 0.55
+            local x = top.X - width / 2
+            local y = top.Y
+            local drawings = entry.Drawings
+            local boxColor = ESPFlag("ESP_BoxColor", ESPBoxColor)
+            local nameColor = ESPFlag("ESP_NameColor", ESPWhite)
+            local distanceColor = ESPFlag("ESP_DistanceColor", ESPWhite)
+            local healthColor = ESPFlag("ESP_HealthColor", ESPHealthColor)
+            local healthTextColor = ESPFlag("ESP_HealthTextColor", ESPWhite)
+            local tracerColor = ESPFlag("ESP_TracerColor", boxColor)
+            local chamsColor = ESPFlag("ESP_ChamsColor", boxColor)
+            local healthRatio = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
+            local textSize = math.clamp(math.floor(height / 12), 9, 14)
+
+            local function set(object, property, value)
+                if object then
+                    pcall(function()
+                        object[property] = value
+                    end)
+                end
+            end
+
+            set(drawings.Box, "Position", Vector2.new(x, y))
+            set(drawings.Box, "Size", Vector2.new(width, height))
+            set(drawings.Box, "Color", boxColor)
+            set(drawings.Box, "Visible", ESPFlag("ESP_Box", true))
+
+            local healthX = x - 5
+            set(drawings.HealthBack, "From", Vector2.new(healthX, y))
+            set(drawings.HealthBack, "To", Vector2.new(healthX, y + height))
+            set(drawings.HealthBack, "Visible", ESPFlag("ESP_HealthBar", true))
+
+            set(drawings.Health, "From", Vector2.new(healthX, y + height))
+            set(drawings.Health, "To", Vector2.new(healthX, y + height - height * healthRatio))
+            set(drawings.Health, "Color", healthColor)
+            set(drawings.Health, "Visible", ESPFlag("ESP_HealthBar", true))
+
+            set(drawings.HealthText, "Text", tostring(math.floor(humanoid.Health)))
+            set(drawings.HealthText, "Size", textSize)
+            set(drawings.HealthText, "Color", healthTextColor)
+            set(drawings.HealthText, "Position", Vector2.new(healthX - 18, y + height - height * healthRatio))
+            set(drawings.HealthText, "Visible", ESPFlag("ESP_HealthText", true))
+
+            set(drawings.Name, "Text", player.Name)
+            set(drawings.Name, "Size", textSize)
+            set(drawings.Name, "Color", nameColor)
+            set(drawings.Name, "Position", Vector2.new(x + width / 2, y - textSize - 3))
+            set(drawings.Name, "Visible", ESPFlag("ESP_Name", true))
+
+            set(drawings.Distance, "Text", tostring(math.floor((camera.CFrame.Position - root.Position).Magnitude)) .. " studs")
+            set(drawings.Distance, "Size", textSize)
+            set(drawings.Distance, "Color", distanceColor)
+            set(drawings.Distance, "Position", Vector2.new(x + width / 2, y + height + 2))
+            set(drawings.Distance, "Visible", ESPFlag("ESP_Distance", true))
+
+            set(drawings.Tracer, "From", Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y))
+            set(drawings.Tracer, "To", Vector2.new(x + width / 2, y + height))
+            set(drawings.Tracer, "Color", tracerColor)
+            set(drawings.Tracer, "Visible", ESPFlag("ESP_Tracer", false))
+
+            if entry.Highlight then
+                entry.Highlight.FillColor = chamsColor
+                entry.Highlight.OutlineColor = chamsColor
+                entry.Highlight.Enabled = ESPFlag("ESP_Chams", false)
+            end
+        end
+    end
+
+    ESPRunService.RenderStepped:Connect(ESPUpdate)
+
+    local function notifyESPPreview(name, value)
+        local callback = ESPState.PreviewCallbacks[name]
+        if callback then
+            callback(value)
+        end
+    end
+
+    local function addESPColor(control, name, colorFlag, default)
+        return control:Colorpicker({
+            Name = name,
+            Flag = colorFlag,
+            Default = default,
+            Callback = function(value)
+                notifyESPPreview(colorFlag, value)
+            end,
+        })
+    end
+
+    local function addESPPreview(section)
+        local content = section.Items and section.Items["Content"]
+        local parent = content and content.Instance
+        if not parent then
+            section:Label("Preview avatar: bacon / 5551922966")
+            return
+        end
+
+        local preview = Instance.new("Frame")
+        preview.Name = "ESPPreview"
+        preview.BackgroundColor3 = Color3.fromRGB(12, 14, 22)
+        preview.BorderSizePixel = 0
+        preview.Size = UDim2.new(1, -16, 0, 205)
+        preview.Parent = parent
+
+        local previewCorner = Instance.new("UICorner")
+        previewCorner.CornerRadius = UDim.new(0, 5)
+        previewCorner.Parent = preview
+
+        local previewTitle = Instance.new("TextLabel")
+        previewTitle.BackgroundTransparency = 1
+        previewTitle.Position = UDim2.new(0, 10, 0, 8)
+        previewTitle.Size = UDim2.new(1, -20, 0, 18)
+        previewTitle.FontFace = Library.Font
+        previewTitle.Text = "ESP PREVIEW  •  BACON AVATAR"
+        previewTitle.TextColor3 = Color3.fromRGB(170, 175, 190)
+        previewTitle.TextSize = 11
+        previewTitle.TextXAlignment = Enum.TextXAlignment.Left
+        previewTitle.Parent = preview
+
+        local previewBox = Instance.new("Frame")
+        previewBox.AnchorPoint = Vector2.new(0.5, 0.5)
+        previewBox.Position = UDim2.new(0.5, 0, 0.57, 0)
+        previewBox.Size = UDim2.new(0, 72, 0, 125)
+        previewBox.BackgroundColor3 = Color3.fromRGB(255, 72, 72)
+        previewBox.BackgroundTransparency = 0.82
+        previewBox.Parent = preview
+
+        local previewStroke = Instance.new("UIStroke")
+        previewStroke.Thickness = 2
+        previewStroke.Color = ESPBoxColor
+        previewStroke.Parent = previewBox
+
+        local avatar = Instance.new("ImageLabel")
+        avatar.BackgroundTransparency = 1
+        avatar.AnchorPoint = Vector2.new(0.5, 0.5)
+        avatar.Position = UDim2.new(0.5, 0, 0.5, 0)
+        avatar.Size = UDim2.new(0, 58, 0, 112)
+        avatar.Image = "rbxassetid://5551922966"
+        avatar.ScaleType = Enum.ScaleType.Fit
+        avatar.Parent = previewBox
+
+        local previewName = Instance.new("TextLabel")
+        previewName.BackgroundTransparency = 1
+        previewName.AnchorPoint = Vector2.new(0.5, 1)
+        previewName.Position = UDim2.new(0.5, 0, 0, -5)
+        previewName.Size = UDim2.new(0, 140, 0, 18)
+        previewName.FontFace = Library.Font
+        previewName.Text = "BaconPlayer"
+        previewName.TextColor3 = ESPWhite
+        previewName.TextSize = 11
+        previewName.TextStrokeTransparency = 0
+        previewName.Parent = previewBox
+
+        local previewDistance = Instance.new("TextLabel")
+        previewDistance.BackgroundTransparency = 1
+        previewDistance.AnchorPoint = Vector2.new(0.5, 0)
+        previewDistance.Position = UDim2.new(0.5, 0, 1, 5)
+        previewDistance.Size = UDim2.new(0, 140, 0, 18)
+        previewDistance.FontFace = Library.Font
+        previewDistance.Text = "42 studs"
+        previewDistance.TextColor3 = ESPWhite
+        previewDistance.TextSize = 10
+        previewDistance.TextStrokeTransparency = 0
+        previewDistance.Parent = previewBox
+
+        local previewHealthBack = Instance.new("Frame")
+        previewHealthBack.AnchorPoint = Vector2.new(1, 0)
+        previewHealthBack.Position = UDim2.new(0, -7, 0, 0)
+        previewHealthBack.Size = UDim2.new(0, 4, 1, 0)
+        previewHealthBack.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        previewHealthBack.Parent = previewBox
+
+        local previewHealth = Instance.new("Frame")
+        previewHealth.AnchorPoint = Vector2.new(0, 1)
+        previewHealth.Position = UDim2.new(0, 0, 1, 0)
+        previewHealth.Size = UDim2.new(1, 0, 0.78, 0)
+        previewHealth.BackgroundColor3 = ESPHealthColor
+        previewHealth.Parent = previewHealthBack
+
+        local previewHealthText = Instance.new("TextLabel")
+        previewHealthText.BackgroundTransparency = 1
+        previewHealthText.AnchorPoint = Vector2.new(1, 0.5)
+        previewHealthText.Position = UDim2.new(0, -9, 0.22, 0)
+        previewHealthText.Size = UDim2.new(0, 24, 0, 16)
+        previewHealthText.FontFace = Library.Font
+        previewHealthText.Text = "78"
+        previewHealthText.TextColor3 = ESPWhite
+        previewHealthText.TextSize = 10
+        previewHealthText.TextStrokeTransparency = 0
+        previewHealthText.Parent = previewBox
+
+        local previewTracer = Instance.new("Frame")
+        previewTracer.AnchorPoint = Vector2.new(0.5, 0)
+        previewTracer.Position = UDim2.new(0.5, 0, 1, 0)
+        previewTracer.Size = UDim2.new(0, 2, 0, 34)
+        previewTracer.BackgroundColor3 = ESPBoxColor
+        previewTracer.Visible = false
+        previewTracer.Parent = preview
+
+        local previewChams = Instance.new("Frame")
+        previewChams.AnchorPoint = Vector2.new(0.5, 0.5)
+        previewChams.Position = UDim2.new(0.5, 0, 0.57, 0)
+        previewChams.Size = UDim2.new(0, 80, 0, 133)
+        previewChams.BackgroundColor3 = ESPBoxColor
+        previewChams.BackgroundTransparency = 0.84
+        previewChams.Visible = false
+        previewChams.ZIndex = 0
+        previewChams.Parent = preview
+
+        local function bindPreview(name, callback)
+            local current = Library.Flags[name]
+            if current ~= nil then
+                callback(current)
+            end
+            ESPState.PreviewCallbacks[name] = callback
+        end
+
+        bindPreview("ESP_Box", function(value)
+            previewBox.Visible = value == true
+        end)
+        bindPreview("ESP_Name", function(value)
+            previewName.Visible = value == true
+        end)
+        bindPreview("ESP_Distance", function(value)
+            previewDistance.Visible = value == true
+        end)
+        bindPreview("ESP_HealthBar", function(value)
+            previewHealthBack.Visible = value == true
+        end)
+        bindPreview("ESP_HealthText", function(value)
+            previewHealthText.Visible = value == true
+        end)
+        bindPreview("ESP_Tracer", function(value)
+            previewTracer.Visible = value == true
+        end)
+        bindPreview("ESP_Chams", function(value)
+            previewChams.Visible = value == true
+        end)
+        bindPreview("ESP_BoxColor", function(value)
+            if value then
+                previewStroke.Color = value
+                previewBox.BackgroundColor3 = value
+            end
+        end)
+        bindPreview("ESP_NameColor", function(value)
+            if value then previewName.TextColor3 = value end
+        end)
+        bindPreview("ESP_DistanceColor", function(value)
+            if value then previewDistance.TextColor3 = value end
+        end)
+        bindPreview("ESP_HealthColor", function(value)
+            if value then previewHealth.BackgroundColor3 = value end
+        end)
+        bindPreview("ESP_HealthTextColor", function(value)
+            if value then previewHealthText.TextColor3 = value end
+        end)
+        bindPreview("ESP_TracerColor", function(value)
+            if value then previewTracer.BackgroundColor3 = value end
+        end)
+        bindPreview("ESP_ChamsColor", function(value)
+            if value then previewChams.BackgroundColor3 = value end
+        end)
+    end
+
+    local function addESPPage(window)
+        if ESPState.Windows[window] then
+            return ESPState.Windows[window]
+        end
+
+        local page = window:Page({
+            Name = "ESP",
+            Icon = "rbxassetid://5551922966",
+            Columns = 2,
+        })
+
+        local previewSection = page:Section({
+            Name = "ESP Preview",
+            Side = 1,
+        })
+        addESPPreview(previewSection)
+
+        local visuals = page:Section({
+            Name = "Visuals",
+            Side = 2,
+        })
+
+        visuals:Toggle({
+            Name = "Enable ESP",
+            Flag = "ESP_Enabled",
+            Default = false,
+        })
+
+        local box = visuals:Toggle({
+            Name = "Box",
+            Flag = "ESP_Box",
+            Default = true,
+            Callback = function(value)
+                notifyESPPreview("ESP_Box", value)
+            end,
+        })
+        addESPColor(box, "Box color", "ESP_BoxColor", ESPBoxColor)
+
+        local name = visuals:Toggle({
+            Name = "Name",
+            Flag = "ESP_Name",
+            Default = true,
+            Callback = function(value)
+                notifyESPPreview("ESP_Name", value)
+            end,
+        })
+        addESPColor(name, "Name color", "ESP_NameColor", ESPWhite)
+
+        local distance = visuals:Toggle({
+            Name = "Distance",
+            Flag = "ESP_Distance",
+            Default = true,
+            Callback = function(value)
+                notifyESPPreview("ESP_Distance", value)
+            end,
+        })
+        addESPColor(distance, "Distance color", "ESP_DistanceColor", ESPWhite)
+
+        local healthBar = visuals:Toggle({
+            Name = "Health bar",
+            Flag = "ESP_HealthBar",
+            Default = true,
+            Callback = function(value)
+                notifyESPPreview("ESP_HealthBar", value)
+            end,
+        })
+        addESPColor(healthBar, "Health bar color", "ESP_HealthColor", ESPHealthColor)
+
+        local healthText = visuals:Toggle({
+            Name = "Health text",
+            Flag = "ESP_HealthText",
+            Default = true,
+            Callback = function(value)
+                notifyESPPreview("ESP_HealthText", value)
+            end,
+        })
+        addESPColor(healthText, "Health text color", "ESP_HealthTextColor", ESPWhite)
+
+        local tracer = visuals:Toggle({
+            Name = "Tracer",
+            Flag = "ESP_Tracer",
+            Default = false,
+            Callback = function(value)
+                notifyESPPreview("ESP_Tracer", value)
+            end,
+        })
+        addESPColor(tracer, "Tracer color", "ESP_TracerColor", ESPBoxColor)
+
+        local chams = visuals:Toggle({
+            Name = "Chams",
+            Flag = "ESP_Chams",
+            Default = false,
+            Callback = function(value)
+                notifyESPPreview("ESP_Chams", value)
+            end,
+        })
+        addESPColor(chams, "Chams color", "ESP_ChamsColor", ESPBoxColor)
+
+        local behavior = page:Section({
+            Name = "Behavior",
+            Side = 2,
+        })
+        behavior:Slider({
+            Name = "Max distance",
+            Flag = "ESP_MaxDistance",
+            Default = 2500,
+            Min = 50,
+            Max = 10000,
+            Decimals = 0,
+            Suffix = " studs",
+        })
+        behavior:Toggle({
+            Name = "Team check",
+            Flag = "ESP_TeamCheck",
+            Default = false,
+        })
+
+        ESPState.Windows[window] = page
+        return page
+    end
+
+    local OriginalWindow = Library.Window
+    Library.Window = function(self, data)
+        local window = OriginalWindow(self, data)
+        addESPPage(window)
+        return window
+    end
+end
+
 return Library
