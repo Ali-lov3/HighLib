@@ -153,6 +153,10 @@ local Library do
             return nil
         end
 
+        if type(IconName) == "table" then
+            return IconName
+        end
+
         if tonumber(IconName) then
             return string.format("rbxassetid://%s", tostring(IconName))
         end
@@ -162,8 +166,8 @@ local Library do
         end
 
         local LucideIcon = self:GetIcon(IconName)
-        if LucideIcon and LucideIcon.Url then
-            return LucideIcon.Url
+        if LucideIcon then
+            return LucideIcon
         end
 
         return IconName
@@ -361,6 +365,14 @@ local Library do
         Instances.__index = Instances
 
         Instances.Create = function(self, Class, Properties)
+            if (Class == "ImageLabel" or Class == "ImageButton") and type(Properties.Image) == "table" then
+                local Icon = Properties.Image
+                Properties = TableClone(Properties)
+                Properties.Image = Icon.Url
+                Properties.ImageRectOffset = Icon.ImageRectOffset
+                Properties.ImageRectSize = Icon.ImageRectSize
+            end
+
             local NewItem = {
                 Instance = InstanceNew(Class),
                 Properties = Properties,
