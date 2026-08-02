@@ -4606,6 +4606,7 @@ local Library do
                         Items["Text"].Instance.Visible = true
                         Items["Selection"].Instance.Visible = false
                         Items["Inactive"].Instance.Size = UDim2New(1, 0, 0, 35)
+                        Items["Icon"].Instance.AnchorPoint = Vector2New(0, 0.5)
                         Items["Icon"].Instance.Position = UDim2New(0, 8, 0.5, 0)
                         Items["Text"].Instance.Position = UDim2New(0, 32, 0.5, 1)
                     else
@@ -4614,6 +4615,7 @@ local Library do
                         Items["Inactive"].Instance.Size = UDim2New(1, 0, 0, 35)
                         Items["Selection"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
                         Items["Selection"].Instance.Size = UDim2New(0, 35, 0, 35)
+                        Items["Icon"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
                         Items["Icon"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
                     end
 
