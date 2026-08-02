@@ -5821,7 +5821,7 @@ do
     }
 
     local ESPState = Library._HighLibESP
-    local ESPBoxColor = Color3.fromRGB(255, 72, 72)
+    local ESPBoxColor = Color3.fromRGB(255, 255, 255)
     local ESPWhite = Color3.fromRGB(255, 255, 255)
     local ESPHealthColor = Color3.fromRGB(65, 220, 110)
 
@@ -6361,7 +6361,7 @@ do
 
         local page = window:Page({
             Name = "ESP",
-            Icon = "settings",
+            Icon = "scan-eye",
             Columns = 2,
         })
 
@@ -6480,6 +6480,35 @@ do
         local window = OriginalWindow(self, data)
         local espPage = addESPPage(window)
         window.ESPPage = espPage
+
+        function window:PlaceESPBeforeLastTab()
+            local Pages = self.Pages
+            local ESPIndex
+
+            for Index, Page in Pages do
+                if Page == self.ESPPage then
+                    ESPIndex = Index
+                    break
+                end
+            end
+
+            if not ESPIndex or #Pages < 2 then
+                return
+            end
+
+            local LastIndex = #Pages
+            if ESPIndex ~= LastIndex - 1 then
+                local ESP = table.remove(Pages, ESPIndex)
+                table.insert(Pages, LastIndex - 1, ESP)
+            end
+
+            for Index, Page in Pages do
+                if Page.Items and Page.Items["Inactive"] then
+                    Page.Items["Inactive"].Instance.LayoutOrder = Index
+                end
+            end
+        end
+
         function window:SelectPage(target)
             if type(target) == "string" then
                 for _, page in self.Pages do
@@ -6494,6 +6523,19 @@ do
                 page:Turn(page == target)
             end
         end
+
+        local OriginalCreateSettingsPage = Library.CreateSettingsPage
+        if not window._ESPSettingsOrderHooked then
+            window._ESPSettingsOrderHooked = true
+            Library.CreateSettingsPage = function(LibrarySelf, SettingsWindow, Watermark, KeyList)
+                local SettingsPage = OriginalCreateSettingsPage(LibrarySelf, SettingsWindow, Watermark, KeyList)
+                if SettingsWindow == window then
+                    window:PlaceESPBeforeLastTab()
+                end
+                return SettingsPage
+            end
+        end
+
         return window
     end
 end
