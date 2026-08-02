@@ -1,6 +1,5 @@
 local LoadingTick = os.clock()
 local Library do
-
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
@@ -13,11 +12,9 @@ local Library do
         return CoreGui
     end
 
-
     local LocalPlayer = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
     local Mouse = cloneref(LocalPlayer:GetMouse())
-
 
     local FromRGB = Color3.fromRGB
     local FromHSV = Color3.fromHSV
@@ -118,12 +115,12 @@ local Library do
     local Themes = {
         ["Default"] = {
             ["Background"] = FromRGB(0, 0, 0),
-            ["Inline"] = FromRGB(24, 24, 24),
+            ["Inline"] = FromRGB(20, 20, 20),
             ["Text"] = FromRGB(255, 255, 255),
-            ["Element"] = FromRGB(48, 48, 48),
+            ["Element"] = FromRGB(35, 35, 35),
             ["Accent"] = FromRGB(255, 255, 255),
             ["Image"] = FromRGB(255, 255, 255),
-            ["Gradient"] = FromRGB(160, 160, 160)
+            ["Gradient"] = FromRGB(200, 200, 200)
         }
     }
 
@@ -203,25 +200,22 @@ local Library do
         ["RightAlt"]          = "RightAlt"
     }
 
-
     for Index, Value in Library.Folders do 
         if not isfolder(Value) then
             makefolder(Value)
         end
     end
 
-
     for Index, Value in Library.Images do 
         local ImageData = Value
 
         local ImageName = ImageData[1]
         local ImageLink = ImageData[2]
-
+        
         if not isfile(Library.Folders.Assets .. "/" .. ImageName) then
             writefile(Library.Folders.Assets .. "/" .. ImageName, game:HttpGet(ImageLink))
         end
     end
-
 
     local Tween = { } do
         Tween.__index = Tween
@@ -315,7 +309,6 @@ local Library do
             self = nil
         end
     end
-
 
     local Instances = { } do
         Instances.__index = Instances
@@ -533,7 +526,7 @@ local Library do
             if not self.Instance then 
                 return
             end
-
+            
             return Library:Connect(self.Instance.MouseEnter, Function)
         end
 
@@ -541,11 +534,10 @@ local Library do
             if not self.Instance then 
                 return
             end
-
+            
             return Library:Connect(self.Instance.MouseLeave, Function)
         end
     end
-
 
     local CustomFont = { } do
         function CustomFont:New(Name, Weight, Style, Data)
@@ -617,7 +609,7 @@ local Library do
         Padding = UDimNew(0, 14),
         SortOrder = Enum.SortOrder.LayoutOrder
     })
-
+        
     Instances:Create("UIPadding", {
         Parent = Library.NotifHolder.Instance,
         Name = "\0",
@@ -661,7 +653,7 @@ local Library do
 
     Library.Thread = function(self, Function)
         local NewThread = coroutine.create(Function)
-
+        
         coroutine.wrap(function()
             coroutine.resume(NewThread)
         end)()
@@ -669,7 +661,7 @@ local Library do
         TableInsert(self.Threads, NewThread)
         return NewThread
     end
-
+    
     Library.SafeCall = function(self, Function, ...)
         local Arguements = { ... }
         local Success, Result = pcall(Function, TableUnpack(Arguements))
@@ -718,7 +710,7 @@ local Library do
         Item = Item.Instance
 
         local AbsoluteSize = Item.AbsoluteSize
-
+        
         if AbsoluteSize.Y >= MaxHeight then 
             Item.Size = UDim2New(0, AbsoluteSize.X, 0, MaxHeight)
         end
@@ -862,7 +854,7 @@ local Library do
         and MousePosition.Y >= Frame.AbsolutePosition.Y and MousePosition.Y <= Frame.AbsolutePosition.Y + Frame.AbsoluteSize.Y
     end
 
-    local Components = { } do 
+    local Components = { } do
         Components.Toggle = function(self, Data)
             local Toggle = {
                 Flag = Data.Flag,
@@ -913,7 +905,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 18, 0, 18),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -926,7 +918,7 @@ local Library do
                     Parent = Items["Indicator"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1054,7 +1046,7 @@ local Library do
                     BorderSizePixel = 0,
                                         ZIndex = 2,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  SubItems["NewButton"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -1067,7 +1059,7 @@ local Library do
                     Parent = SubItems["NewButton"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1098,7 +1090,7 @@ local Library do
                     SubItems["NewButton"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                     SubItems["NewButton"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
                 end
-
+                
                 SubItems["NewButton"]:Connect("MouseButton1Down", function()
                     SubButton:Press()
                 end)
@@ -1155,7 +1147,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 12),
                                         ZIndex = 2,
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48),
+                    BackgroundColor3 = FromRGB(35, 35, 35),
                     ClipsDescendants = true,
                 })  Items["RealSlider"]:AddToTheme({BackgroundColor3 = "Element"})
 
@@ -1169,7 +1161,7 @@ local Library do
                     Parent = Items["RealSlider"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1199,7 +1191,7 @@ local Library do
                                         ZIndex = 2,
                     Size = UDim2New(0, 8, 0, 8),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["Circle"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -1212,7 +1204,7 @@ local Library do
                     Parent = Items["Accent"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1351,7 +1343,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 25),
                                         ZIndex = 2,
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["RealDropdown"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -1364,7 +1356,7 @@ local Library do
                     Parent = Items["RealDropdown"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1415,7 +1407,7 @@ local Library do
                     Selectable = false,
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.Y,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["OptionHolder"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UICorner", {
@@ -1444,7 +1436,7 @@ local Library do
                     Parent = Items["Search"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1468,7 +1460,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     AnchorPoint = Vector2New(0, 0.5),
-                    PlaceholderColor3 = FromRGB(185, 185, 185),
+                    PlaceholderColor3 = FromRGB(180, 180, 180),
                     PlaceholderText = "Search",
                     TextSize = 16,
                     Size = UDim2New(1, -40, 0, 15),
@@ -1619,7 +1611,7 @@ local Library do
                         OptionData.Selected = true
                         OptionData:Toggle("Active")
                     end
-
+                    
                     local TextFormat = #self.Value == 0 and "--" or TableConcat(self.Value, ", ")
                     Items["Value"].Instance.Text = TextFormat
                 else
@@ -1867,7 +1859,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 14,
                                      ZIndex = 2, 
-                    BackgroundColor3 = FromRGB(128, 128, 128)
+                    BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
                 Instances:Create("UICorner", {
@@ -1880,7 +1872,7 @@ local Library do
                     Parent = Items["ColorpickerButton"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -1918,7 +1910,7 @@ local Library do
                     Size = UDim2New(1, -16, 0, 22),
                     BorderSizePixel = 0,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(128, 128, 128)
+                    BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
                 Instances:Create("UICorner", {
@@ -2043,7 +2035,7 @@ local Library do
                     Size = UDim2New(1, -16, 1, -175),
                     BorderSizePixel = 0,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(128, 128, 128)
+                    BackgroundColor3 = FromRGB(255, 255, 255)
                 })  
 
                 Instances:Create("UICorner", {
@@ -2190,7 +2182,7 @@ local Library do
                     Suffix = "%",
                     Callback = function(Value) end
                 })
-
+                
                 AnimationSpeedItems["Slider"].Instance.AnchorPoint = Vector2New(0, 1)
                 AnimationSpeedItems["Slider"].Instance.Position = UDim2New(0, 8, 1, -8)
                 AnimationSpeedItems["Slider"].Instance.Size = UDim2New(1, -16, 0, 33)
@@ -2225,7 +2217,7 @@ local Library do
                             end)
                         elseif Value == "Fade" then
                             OldColor = Colorpicker.Color
-
+                                
                             Library:Thread(function()
                                 while task.wait() do 
                                     local Speed = MathAbs(MathSin(tick() * (AnimationSpeed.Value / 25)))
@@ -2240,7 +2232,7 @@ local Library do
                             end)
                         elseif Value == "Fade Alpha" then
                             OldAlpha = Colorpicker.Alpha
-
+                                
                             Library:Thread(function()
                                 while task.wait() do 
                                     local AlphaValue = MathAbs(MathSin(tick() * (AnimationSpeed.Value / 25)))
@@ -2280,7 +2272,7 @@ local Library do
             Items["ColorpickerButton"]:Connect("MouseButton2Down", function()
                 SetOpen2(not IsOpen2)
             end)
-
+            
             Items["Copy"]:Connect("MouseButton1Down", function()
                 Library.CopiedColor = Colorpicker.Color
                 SetOpen2(false)
@@ -2316,7 +2308,7 @@ local Library do
 
                 SetOpen2(false)
             end)
-
+                
             local Debounce = false
 
             local SlidingPalette = false 
@@ -2351,7 +2343,7 @@ local Library do
 
                 if self.IsOpen then 
                     Items["ColorpickerWindow"].Instance.Position = UDim2New(0, Items["ColorpickerButton"].Instance.AbsolutePosition.X, 0, Items["ColorpickerButton"].Instance.AbsolutePosition.Y + 25)
-
+                
                     for Index, Value in Library.OpenFrames do 
                         if Value ~= self then 
                             Value:SetOpen(false)
@@ -2467,7 +2459,7 @@ local Library do
                 Items["AlphaDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(SlideX, 0, 0, 0)})
                 self:Update(true, true)
             end
-
+            
             local IsFirstTime = false
 
             function Colorpicker:Set(Color, Alpha)
@@ -2484,9 +2476,9 @@ local Library do
 
                 local PaletteValueX = MathClamp(1 - self.Saturation, 0, 0.99)
                 local PaletteValueY = MathClamp(1 - self.Value, 0, 0.99)
-
+                    
                 local HuePositionX = MathClamp(self.Hue, 0, 0.99)
-
+                
                 local AlphaPositionX = MathClamp(self.Alpha, 0, 0.99)
 
                 Items["PaletteDragger"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2New(PaletteValueX, 0, PaletteValueY, 0)})
@@ -2824,7 +2816,7 @@ local Library do
 
             function Keybind:SetOpen(Bool)
                 self.IsOpen = Bool
-
+                
                 if self.IsOpen then
                     Items["KeybindWindow"].Instance.Visible = true
                     Items["KeybindWindow"].Instance.Parent = Library.Holder.Instance
@@ -3021,7 +3013,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 25),
                                         ZIndex = 2,
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["Background"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -3034,7 +3026,7 @@ local Library do
                     Parent = Items["Background"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -3044,7 +3036,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     AnchorPoint = Vector2New(0, 0.5),
-                    PlaceholderColor3 = FromRGB(185, 185, 185),
+                    PlaceholderColor3 = FromRGB(180, 180, 180),
                     PlaceholderText = Data.Placeholder,
                     TextSize = 16,
                     Size = UDim2New(1, -16, 0, 15),
@@ -3084,7 +3076,7 @@ local Library do
                     Library:SafeCall(Data.Callback, Value)
                 end
             end
-
+            
             if Data.Finished then 
                 Items["Input"]:Connect("FocusLost", function(PressedEnterQuestionMark)
                     if PressedEnterQuestionMark then
@@ -3108,7 +3100,7 @@ local Library do
             return Textbox, Items
         end
 
-        Components.Searchbox = function(self, Data) 
+        Components.Searchbox = function(self, Data)
             local Dropdown = { 
                 Flag = Data.Flag,
                 Value = { },
@@ -3158,7 +3150,7 @@ local Library do
                     Name = "\0",
                     FontFace = Library.Font,
                     AnchorPoint = Vector2New(0, 0.5),
-                    PlaceholderColor3 = FromRGB(185, 185, 185),
+                    PlaceholderColor3 = FromRGB(180, 180, 180),
                     PlaceholderText = "Search",
                     TextSize = 16,
                     Size = UDim2New(1, -40, 0, 15),
@@ -3178,7 +3170,7 @@ local Library do
                     Parent = Items["Searchbar"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -3210,7 +3202,7 @@ local Library do
                     Parent = Items["RealSearchbox"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -3266,7 +3258,7 @@ local Library do
                         OptionData.Selected = true
                         OptionData:Toggle("Active")
                     end
-
+                    
                     local TextFormat = #self.Value == 0 and "--" or TableConcat(self.Value, ", ")
                 else
                     if not self.Options[Option] then
@@ -3447,7 +3439,7 @@ local Library do
         end
     end
 
-    do 
+    do
         Library.Watermark = function(self, Name)
             local Watermark = { }
 
@@ -3462,7 +3454,7 @@ local Library do
                     AutomaticSize = Enum.AutomaticSize.XY,
                     BackgroundColor3 = FromRGB(0, 0, 0)
                 })  Items["Watermark"]:AddToTheme({BackgroundColor3 = "Background"})
-
+                
                 Items["Watermark"]:MakeDraggable()
 
                 Instances:Create("UICorner", {
@@ -3582,7 +3574,7 @@ local Library do
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
             end
-
+            
             function KeyList:SetVisibility(Bool)
                 Items["KeybindList"].Instance.Visible = Bool
             end
@@ -3604,7 +3596,7 @@ local Library do
                     TextSize = 16,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  NewKey:AddToTheme({TextColor3 = "Text"})
-
+                
                 function NewKey:SetText(Key, Name, Mode)
                     NewKey.Instance.Text = Key.." - "..Name.." ("..Mode..")"
                 end
@@ -3690,7 +3682,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 12),
                     ClipsDescendants = true,
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["Liner"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -3703,7 +3695,7 @@ local Library do
                     Parent = Items["Liner"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -3731,7 +3723,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 8, 0, 8),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(48, 48, 48)
+                    BackgroundColor3 = FromRGB(35, 35, 35)
                 })  Items["Circle"]:AddToTheme({BackgroundColor3 = "Element"})
 
                 Instances:Create("UICorner", {
@@ -3744,7 +3736,7 @@ local Library do
                     Parent = Items["Accent"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -3775,7 +3767,7 @@ local Library do
 
                 Items["Notification"]:Tween(nil, {Size = UDim2New(0, Size.X, 0, 0)})
                 Items["Accent"]:Tween(TweenInfo.new(Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2New(0, 0, 1, 0)})
-
+                
                 task.delay(Duration + 0.1, function()
                     for Index, Value in Items do 
                         if Value.Instance:IsA("Frame") then
@@ -3838,7 +3830,7 @@ local Library do
                                         ZIndex = 2,
                     Size = UDim2New(1, 0, 0, 40),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["Topbar"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UICorner", {
@@ -3856,7 +3848,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(1, 0, 0, 4),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 }):AddToTheme({BackgroundColor3 = "Inline"})
 
                 Items["Title"] = Instances:Create("TextLabel", {
@@ -3950,7 +3942,7 @@ local Library do
                                         ZIndex = 2,
                     Size = UDim2New(0, 185, 0, 40),
                     BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["UserInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UICorner", {
@@ -4016,7 +4008,7 @@ local Library do
                     Size = UDim2New(0, 1, 1, -40),
                     BorderSizePixel = 0,
                     ZIndex = 2,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 }):AddToTheme({BackgroundColor3 = "Inline"})
 
                 Items["BackgroundImage"] = Instances:Create("ImageLabel", {
@@ -4092,7 +4084,7 @@ local Library do
 
                 Window.IsOpen = Bool
                 Debounce = true 
-
+                
                 if Window.IsOpen then
                     Items["MainFrame"].Instance.Visible = true
                 end
@@ -4173,7 +4165,7 @@ local Library do
             local IsFullScreen = false
             Items["FullscreenButton"]:Connect("MouseButton1Down", function()
                 IsFullScreen = not IsFullScreen
-
+                
                 if IsFullScreen then
                     if IsMinimized then
                         Window:Minimize(false)
@@ -4226,7 +4218,7 @@ local Library do
                     Size = UDim2New(1, 0, 0, 35),
                     BorderSizePixel = 0,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UICorner", {
@@ -4315,7 +4307,7 @@ local Library do
                         BorderColor3 = FromRGB(0, 0, 0),
                         Size = UDim2New(1, 0, 0, 1),
                         BorderSizePixel = 0,
-                        BackgroundColor3 = FromRGB(24, 24, 24)
+                        BackgroundColor3 = FromRGB(20, 20, 20)
                     })  Items["Liner"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                     Instances:Create("UIListLayout", {
@@ -4369,14 +4361,14 @@ local Library do
                             Padding = UDimNew(0, 8),
                             SortOrder = Enum.SortOrder.LayoutOrder
                         })
-
+                        
                         Page.ColumnsData[Index] = NewColumn
                     end
                 end
 
                 Page.Items = Items
             end
-
+            
             local Debounce = false
 
             function Page:Turn(Bool)
@@ -4389,7 +4381,7 @@ local Library do
 
                 Items["Page"].Instance.Visible = Bool
                 Items["Page"].Instance.Parent = not Bool and Library.UnusedHolder.Instance or Page.Window.Items["Content"].Instance
-
+                
                 if Page.Active then
                     Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
                     Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
@@ -4466,7 +4458,7 @@ local Library do
                     Parent = Page.Page.Items["SubPages"].Instance,
                     Name = "\0",
                     FontFace = Library.Font,
-                    TextColor3 = FromRGB(160, 160, 160),
+                    TextColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "",
                     AutoButtonColor = false,
@@ -4475,14 +4467,14 @@ local Library do
                     Size = UDim2New(0, 48, 1, 0),
                     ZIndex = 2,
                     TextSize = 18,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UIGradient", {
                     Parent = Items["Inactive"].Instance,
                     Name = "\0",
                     Rotation = 90,
-                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(160, 160, 160))}
+                    Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(200, 200, 200))}
                 }):AddToTheme({Color = function()
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
@@ -4598,7 +4590,7 @@ local Library do
 
                 Items["Page"].Instance.Visible = Bool
                 Items["Page"].Instance.Parent = not Bool and Library.UnusedHolder.Instance or Page.Page.Items["Columns"].Instance
-
+                
                 if Page.Active then
                     Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
 
@@ -4675,7 +4667,7 @@ local Library do
                     BorderSizePixel = 0,
                     ZIndex = 2,
                     AutomaticSize = Enum.AutomaticSize.Y,
-                    BackgroundColor3 = FromRGB(24, 24, 24)
+                    BackgroundColor3 = FromRGB(20, 20, 20)
                 })  Items["Section"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Instances:Create("UICorner", {
@@ -4844,7 +4836,7 @@ local Library do
 
         Library.Sections.Slider = function(self, Data)
             Data = Data or { }
-
+            
             local Slider = {
                 Window = self.Window,
                 Page = self.Page,
@@ -5297,7 +5289,7 @@ local Library do
                         Library.Tween.Direction = Enum.EasingDirection[Value]
                     end
                 })
-
+                
                 local Images = {
                     ["Scary Cat"] = "rbxassetid://115002736787206", 
                     ["Scary Cat 2"] = "rbxassetid://105189727229400",
