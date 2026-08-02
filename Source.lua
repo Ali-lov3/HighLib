@@ -1294,6 +1294,7 @@ local Library do
                     Parent = Items["Slider"].Instance,
                     Text = "",
                     AutoButtonColor = false,
+                    Active = true,
                     Name = "\0",
                     AnchorPoint = Vector2New(0, 1),
                     Position = UDim2New(0, 0, 1, 0),
@@ -1402,40 +1403,39 @@ local Library do
                 Items["Slider"].Instance.Visible = Bool
             end
 
-            local InputChanged
+            local function SetFromInput(Input)
+                if not Input then
+                    return
+                end
+
+                local sliderInstance = Items["RealSlider"].Instance
+                local width = sliderInstance.AbsoluteSize.X
+                if width <= 0 then
+                    return
+                end
+
+                local sizeX = MathClamp((Input.Position.X - sliderInstance.AbsolutePosition.X) / width, 0, 1)
+                Slider:Set(((Data.Max - Data.Min) * sizeX) + Data.Min)
+            end
 
             Items["RealSlider"]:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     Slider.Sliding = true
-
-                    local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
-                    local Value = ((Data.Max - Data.Min) * SizeX) + Data.Min
-
-                    Slider:Set(Value)
-
-                    if InputChanged then
-                        return
-                    end
-
-                    InputChanged = Input.Changed:Connect(function()
-                        if Input.UserInputState == Enum.UserInputState.End then
-                            Slider.Sliding = false
-
-                            InputChanged:Disconnect()
-                            InputChanged = nil
-                        end
-                    end)
+                    SetFromInput(Input)
                 end
             end)
 
             Library:Connect(UserInputService.InputChanged, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
                     if Slider.Sliding then
-                        local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
-                        local Value = ((Data.Max - Data.Min) * SizeX) + Data.Min
-
-                        Slider:Set(Value)
+                        SetFromInput(Input)
                     end
+                end
+            end)
+
+            Library:Connect(UserInputService.InputEnded, function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                    Slider.Sliding = false
                 end
             end)
 
@@ -5756,9 +5756,6 @@ local Library do
     end
 end
 
---// Built-in ESP extension
---// The original HighLib implementation above is intentionally kept intact.
---// This extension only adds one permanent page to every Window.
 do
     local ESPPlayers = game:GetService("Players")
     local ESPRunService = game:GetService("RunService")
@@ -6416,6 +6413,9 @@ do
             Max = 10000,
             Decimals = 0,
             Suffix = " studs",
+            Callback = function(value)
+                Library.Flags["ESP_MaxDistance"] = value
+            end,
         })
         behavior:Toggle({
             Name = "Team check",
