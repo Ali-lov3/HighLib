@@ -4018,12 +4018,14 @@ local Library do
                 Name = Data.Name or Data.name or "Window",
                 Logo = Data.Logo or Data.logo or "rbxassetid://127120679730794",
                 ShowTabName = Data.ShowTabName == true or Data.showTabName == true,
+                SidebarWidth = (Data.ShowTabName == true or Data.showTabName == true) and 185 or 52,
 
                 Pages = { },
                 Items = { }
             }
 
             local ResizeButton
+            local ApplySidebarLayout
 
             local Items = { } do
                 Items["MainFrame"] = Instances:Create("Frame", {
@@ -4165,7 +4167,7 @@ local Library do
                     Position = UDim2New(0, 8, 0, 48),
                                         ZIndex = 2,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 185, 1, -56),
+                    Size = UDim2New(0, Window.SidebarWidth, 1, -56),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
@@ -4184,7 +4186,7 @@ local Library do
                     Position = UDim2New(0, 8, 1, -8),
                     BorderColor3 = FromRGB(0, 0, 0),
                                         ZIndex = 2,
-                    Size = UDim2New(0, 185, 0, 40),
+                    Size = UDim2New(0, Window.SidebarWidth, 0, 40),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(24, 24, 24)
                 })  Items["UserInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
@@ -4236,18 +4238,18 @@ local Library do
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 201, 0, 48),
+                    Position = UDim2New(0, Window.SidebarWidth + 16, 0, 48),
                                         ZIndex = 2,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(1, -209, 1, -56),
+                    Size = UDim2New(1, -(Window.SidebarWidth + 24), 1, -56),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
-                Instances:Create("Frame", {
+                Items["SidebarDivider"] = Instances:Create("Frame", {
                     Parent = Items["MainFrame"].Instance,
                     Name = "\0",
-                    Position = UDim2New(0, Items["Pages"].Instance.AbsoluteSize.X + 16, 0, 40),
+                    Position = UDim2New(0, Window.SidebarWidth + 16, 0, 40),
                     BorderColor3 = FromRGB(0, 0, 0),
                     Size = UDim2New(0, 1, 1, -40),
                     BorderSizePixel = 0,
@@ -4271,6 +4273,29 @@ local Library do
                     Name = "\0",
                     CornerRadius = UDimNew(0, 5)
                 })
+
+                ApplySidebarLayout = function()
+                    local SidebarWidth = Window.ShowTabName and 185 or 52
+
+                    Window.SidebarWidth = SidebarWidth
+                    Items["Pages"].Instance.Size = UDim2New(0, SidebarWidth, 1, -56)
+                    Items["UserInfo"].Instance.Size = UDim2New(0, SidebarWidth, 0, 40)
+                    Items["Content"].Instance.Position = UDim2New(0, SidebarWidth + 16, 0, 48)
+                    Items["Content"].Instance.Size = UDim2New(1, -(SidebarWidth + 24), 1, -56)
+                    Items["SidebarDivider"].Instance.Position = UDim2New(0, SidebarWidth + 16, 0, 40)
+
+                    if Window.ShowTabName then
+                        Items["Avatar"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        Items["Avatar"].Instance.Position = UDim2New(0, 8, 0.5, 0)
+                        Items["Username"].Instance.Visible = true
+                    else
+                        Items["Avatar"].Instance.AnchorPoint = Vector2New(0.5, 0.5)
+                        Items["Avatar"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                        Items["Username"].Instance.Visible = false
+                    end
+                end
+
+                ApplySidebarLayout()
 
                 if IsMobile then
                     Items["FloatingButton"] = Instances:Create("TextButton", {
@@ -4402,6 +4427,7 @@ local Library do
 
             function Window:SetShowTabName(Bool)
                 Window.ShowTabName = Bool == true
+                ApplySidebarLayout()
 
                 for _, Page in Window.Pages do
                     if Page.SetTabNameVisibility then
