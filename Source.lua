@@ -969,7 +969,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(1, -24, 0, 0),
+                    Position = UDim2New(1, -44, 0, 0),
                     Size = UDim2New(0, 0, 1, 0),
                                         ZIndex = 2,
                     BorderSizePixel = 0,
@@ -982,7 +982,7 @@ local Library do
                     Name = "\0",
                     FillDirection = Enum.FillDirection.Horizontal,
                     HorizontalAlignment = Enum.HorizontalAlignment.Right,
-                    Padding = UDimNew(0, 6),
+                    Padding = UDimNew(0, 8),
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
             end
