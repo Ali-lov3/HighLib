@@ -373,12 +373,10 @@ local Library do
                 return
             end
 
-            if IsMobile then
-                if Event == "MouseButton1Down" or Event == "MouseButton1Click" then
-                    Event = "TouchTap"
-                elseif Event == "MouseButton2Down" or Event == "MouseButton2Click" then
-                    Event = "TouchLongPress"
-                end
+            if Event == "MouseButton1Down" or Event == "MouseButton1Click" then
+                Event = "Activated"
+            elseif Event == "MouseButton2Down" or Event == "MouseButton2Click" then
+                Event = IsMobile and "TouchLongPress" or "MouseButton2Click"
             end
 
             return Library:Connect(self.Instance[Event], Callback, Name)
@@ -911,7 +909,7 @@ local Library do
                     Position = UDim2New(1, 0, 0, 0),
                                         ZIndex = 2,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 18, 0, 18),
+                    Size = UDim2New(0, 34, 0, 18),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(48, 48, 48)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
@@ -919,7 +917,7 @@ local Library do
                 Instances:Create("UICorner", {
                     Parent = Items["Indicator"].Instance,
                     Name = "\0",
-                    CornerRadius = UDimNew(0, 5)
+                    CornerRadius = UDimNew(1, 0)
                 })
 
                 Instances:Create("UIGradient", {
@@ -945,6 +943,24 @@ local Library do
                     Size = UDim2New(1, -4, 1, -4),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Knob"] = Instances:Create("Frame", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Position = UDim2New(0, 3, 0.5, 0),
+                    ZIndex = 3,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(0, 12, 0, 12),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(160, 160, 160)
+                })  Items["Knob"]:AddToTheme({BackgroundColor3 = "Gradient"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Knob"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
                 })
 
                 Items["SubElements"] = Instances:Create("Frame", {
@@ -982,13 +998,19 @@ local Library do
                 if self.Value then
                     Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
                     Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
-
-                    Items["Check"]:Tween(nil, {ImageTransparency = 0})
+                    Items["Knob"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Knob"]:Tween(nil, {
+                        Position = UDim2New(1, -15, 0.5, 0),
+                        BackgroundColor3 = Library.Theme.Element
+                    })
                 else
                     Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                     Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
-
-                    Items["Check"]:Tween(nil, {ImageTransparency = 1})
+                    Items["Knob"]:ChangeItemTheme({BackgroundColor3 = "Gradient"})
+                    Items["Knob"]:Tween(nil, {
+                        Position = UDim2New(0, 3, 0.5, 0),
+                        BackgroundColor3 = Library.Theme.Gradient
+                    })
                 end
 
                 if Data.Callback then
@@ -4253,13 +4275,14 @@ local Library do
                     Items["FloatingButton"] = Instances:Create("TextButton", {
                         Parent = Library.Holder.Instance,
                         Name = "\0",
-                        Active = false,
+                        Active = true,
                         BorderColor3 = FromRGB(0, 0, 0),
                         Text = "",
                         AutoButtonColor = false,
                         AnchorPoint = Vector2New(1, 0.5),
                         Position = UDim2New(1, -18, 0.5, 0),
                         Size = UDim2New(0, 56, 0, 56),
+                        ZIndex = 100,
                         Selectable = false,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(0, 0, 0)
@@ -4280,6 +4303,7 @@ local Library do
                         BackgroundTransparency = 1,
                         Position = UDim2New(0.5, 0, 0.5, 0),
                         Size = UDim2New(1, -14, 1, -14),
+                        ZIndex = 101,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })
@@ -4292,7 +4316,7 @@ local Library do
                         Color = FromRGB(255, 255, 255)
                     }):AddToTheme({Color = "Accent"})
 
-                    Items["FloatingButton"]:Connect("MouseButton1Down", function()
+                    Items["FloatingButton"]:Connect("Activated", function()
                         Window:SetOpen(not Window.IsOpen)
                     end)
                 end
@@ -4300,18 +4324,21 @@ local Library do
                 Window.Items = Items
             end
 
-            local Debounce = false
-
             local IsMinimized = false
             local OldSize = Items["MainFrame"].Instance.AbsoluteSize
+            local TransparencyCache = { }
+            local OpenAnimation = 0
 
             function Window:SetOpen(Bool)
-                if Debounce then
+                Bool = Bool == true
+
+                if Window.IsOpen == Bool and Items["MainFrame"].Instance.Visible == Bool then
                     return
                 end
 
                 Window.IsOpen = Bool
-                Debounce = true 
+                OpenAnimation += 1
+                local AnimationId = OpenAnimation
 
                 if Window.IsOpen then
                     Items["MainFrame"].Instance.Visible = true
@@ -4320,8 +4347,6 @@ local Library do
                 local Descendants = Items["MainFrame"].Instance:GetDescendants()
                 TableInsert(Descendants, Items["MainFrame"].Instance)
 
-                local NewTween
-
                 for Index, Value in Descendants do 
                     local TransparencyProperty = Tween:GetProperty(Value)
 
@@ -4329,19 +4354,37 @@ local Library do
                         continue
                     end
 
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Window.IsOpen, Library.FadeSpeed)
+                    if not TransparencyCache[Value] then
+                        TransparencyCache[Value] = { }
+                    end
+
+                    for _, Property in TransparencyProperty do
+                        if TransparencyCache[Value][Property] == nil then
+                            TransparencyCache[Value][Property] = Value[Property]
                         end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Window.IsOpen, Library.FadeSpeed)
+
+                        local Goal = Window.IsOpen and TransparencyCache[Value][Property] or 1
+                        TweenService:Create(
+                            Value,
+                            TweenInfo.new(Library.FadeSpeed, Library.Tween.Style, Library.Tween.Direction),
+                            {[Property] = Goal}
+                        ):Play()
                     end
                 end
 
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                    Items["MainFrame"].Instance.Visible = Window.IsOpen
-                end)
+                if not Window.IsOpen then
+                    task.delay(Library.FadeSpeed, function()
+                        if AnimationId == OpenAnimation then
+                            Items["MainFrame"].Instance.Visible = false
+                        end
+                    end)
+                else
+                    task.delay(Library.FadeSpeed, function()
+                        if AnimationId == OpenAnimation then
+                        Items["MainFrame"].Instance.Visible = Window.IsOpen
+                        end
+                    end)
+                end
             end
 
             function Window:SetBackgroundImage(Image)
