@@ -4255,7 +4255,8 @@ local Library do
                     BorderSizePixel = 0,
                     ZIndex = 2,
                     BackgroundColor3 = FromRGB(24, 24, 24)
-                }):AddToTheme({BackgroundColor3 = "Inline"})
+                })
+                Items["SidebarDivider"]:AddToTheme({BackgroundColor3 = "Inline"})
 
                 Items["BackgroundImage"] = Instances:Create("ImageLabel", {
                     Parent = Items["MainFrame"].Instance,
