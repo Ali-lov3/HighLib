@@ -72,9 +72,9 @@ local Library do
         },
 
         Folders = {
-            Directory = "midnighthub",
-            Configs = "midnighthub/Configs",
-            Assets = "midnighthub/Assets",
+            Directory = "Xeioa",
+            Configs = "Xeioa/Configs",
+            Assets = "Xeioa/Assets",
         },
 
         Images = {
