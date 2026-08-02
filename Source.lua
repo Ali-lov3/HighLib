@@ -1013,6 +1013,130 @@ local Library do
             return Toggle, Items 
         end
 
+        Components.Checkbox = function(self, Data)
+            local Checkbox = {
+                Flag = Data.Flag,
+                Value = false
+            }
+
+            local Items = { } do
+                Items["Checkbox"] = Instances:Create("TextButton", {
+                    Parent = Data.Parent.Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    ZIndex = 2,
+                    Size = UDim2New(1, 0, 0, 16),
+                    BorderSizePixel = 0,
+                    TextSize = 14,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Text"] = Instances:Create("TextLabel", {
+                    Parent = Items["Checkbox"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(255, 255, 255),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = Data.Name,
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Size = UDim2New(0, 0, 0, 15),
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0, 0, 0.5, 0),
+                    ZIndex = 2,
+                    BorderSizePixel = 0,
+                    AutomaticSize = Enum.AutomaticSize.X,
+                    TextSize = 16,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
+                Items["Indicator"] = Instances:Create("Frame", {
+                    Parent = Items["Checkbox"].Instance,
+                    Name = "\0",
+                    AnchorPoint = Vector2New(1, 0),
+                    Position = UDim2New(1, 0, 0, 0),
+                    ZIndex = 2,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(0, 18, 0, 18),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(48, 48, 48)
+                })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 4)
+                })
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    Thickness = 1,
+                    Transparency = 0.2,
+                    Color = FromRGB(160, 160, 160)
+                }):AddToTheme({Color = "Gradient"})
+
+                Items["Check"] = Instances:Create("ImageLabel", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    ImageColor3 = FromRGB(0, 0, 0),
+                    ImageTransparency = 1,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Image = "rbxassetid://100217033137980",
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    ZIndex = 2,
+                    Size = UDim2New(1, -4, 1, -4),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+            end
+
+            function Checkbox:Get()
+                return self.Value
+            end
+
+            function Checkbox:Set(Bool)
+                self.Value = Bool
+                Library.Flags[self.Flag] = self.Value
+
+                if self.Value then
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
+                    Items["Check"]:Tween(nil, {ImageTransparency = 0})
+                else
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
+                    Items["Check"]:Tween(nil, {ImageTransparency = 1})
+                end
+
+                if Data.Callback then
+                    Library:SafeCall(Data.Callback, self.Value)
+                end
+            end
+
+            function Checkbox:SetVisibility(Bool)
+                Items["Checkbox"].Instance.Visible = Bool
+            end
+
+            Items["Checkbox"]:Connect("MouseButton1Down", function()
+                Checkbox:Set(not Checkbox.Value)
+            end)
+
+            Checkbox:Set(Data.Default)
+
+            Library.SetFlags[Checkbox.Flag] = function(Value)
+                Checkbox:Set(Value)
+            end
+
+            return Checkbox, Items
+        end
+
         Components.Button = function(self, Data)
             local Button = { }
 
@@ -4133,19 +4257,18 @@ local Library do
                         BorderColor3 = FromRGB(0, 0, 0),
                         Text = "",
                         AutoButtonColor = false,
-                        Position = UDim2New(0, 1213, 0, 121),
-                        Size = UDim2New(0, 65, 0, 65),
+                        AnchorPoint = Vector2New(1, 0.5),
+                        Position = UDim2New(1, -18, 0.5, 0),
+                        Size = UDim2New(0, 56, 0, 56),
                         Selectable = false,
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(0, 0, 0)
                     })  Items["FloatingButton"]:AddToTheme({BackgroundColor3 = "Background"})
 
-                    Items["FloatingButton"]:MakeDraggable()
-
                     Instances:Create("UICorner", {
                         Parent = Items["FloatingButton"].Instance,
                         Name = "\0",
-                        CornerRadius = UDimNew(0, 5)
+                    CornerRadius = UDimNew(1, 0)
                     })
 
                     Items["Logo"] = Instances:Create("ImageLabel", {
@@ -4153,13 +4276,21 @@ local Library do
                         Name = "\0",
                         BorderColor3 = FromRGB(0, 0, 0),
                         AnchorPoint = Vector2New(0.5, 0.5),
-                        Image = "rbxassetid://127120679730794",
+                        Image = Window.Logo,
                         BackgroundTransparency = 1,
                         Position = UDim2New(0.5, 0, 0.5, 0),
-                        Size = UDim2New(1, -10, 1, -10),
+                        Size = UDim2New(1, -14, 1, -14),
                         BorderSizePixel = 0,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })
+
+                    Instances:Create("UIStroke", {
+                        Parent = Items["FloatingButton"].Instance,
+                        Name = "\0",
+                        Thickness = 1,
+                        Transparency = 0.15,
+                        Color = FromRGB(255, 255, 255)
+                    }):AddToTheme({Color = "Accent"})
 
                     Items["FloatingButton"]:Connect("MouseButton1Down", function()
                         Window:SetOpen(not Window.IsOpen)
@@ -4220,6 +4351,9 @@ local Library do
             function Window:SetLogo(Image)
                 Window.Logo = Image
                 Items["WindowLogo"].Instance.Image = Image
+                if Items["Logo"] then
+                    Items["Logo"].Instance.Image = Image
+                end
             end
 
             function Window:Minimize(Bool)
@@ -4255,7 +4389,7 @@ local Library do
             end
 
             Library:Connect(UserInputService.InputBegan, function(Input)
-                if tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind then
+                if not IsMobile and (tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind) then
                     Window:SetOpen(not Window.IsOpen)
                 end
             end)
@@ -4756,6 +4890,7 @@ local Library do
 
                 Name = Data.Name or Data.name or "Section",
                 Side = Data.Side or Data.side or 1,
+                Icon = Data.Icon or Data.icon or nil,
 
                 Items = { }
             }
@@ -4783,6 +4918,22 @@ local Library do
                     Name = "\0",
                     PaddingBottom = UDimNew(0, 8)
                 })
+
+                if Section.Icon then
+                    Items["Icon"] = Instances:Create("ImageLabel", {
+                        Parent = Items["Section"].Instance,
+                        Name = "\0",
+                        Image = Section.Icon,
+                        Position = UDim2New(0, 8, 0, 8),
+                        Size = UDim2New(0, 16, 0, 16),
+                        BorderColor3 = FromRGB(0, 0, 0),
+                        BorderSizePixel = 0,
+                        BackgroundTransparency = 1,
+                        ScaleType = Enum.ScaleType.Fit,
+                        ZIndex = 2,
+                        BackgroundColor3 = FromRGB(255, 255, 255)
+                    })  Items["Icon"]:AddToTheme({ImageColor3 = "Image"})
+                end
 
                 Items["Liner"] = Instances:Create("Frame", {
                     Parent = Items["Section"].Instance,
@@ -4832,10 +4983,20 @@ local Library do
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
 
-                Items["Liner"].Instance.Size = UDim2New(0, Items["Text"].Instance.TextBounds.X + 5, 0, 2)
+                Items["Text"].Instance.Position = UDim2New(0, Section.Icon and 32 or 8, 0, 8)
+                Items["Liner"].Instance.Size = UDim2New(0, Items["Text"].Instance.TextBounds.X + (Section.Icon and 29 or 5), 0, 2)
 
                 Section.Items = Items
             end
+
+            Section.Toggle = Library.Sections.Toggle
+            Section.Checkbox = Library.Sections.Checkbox
+            Section.Button = Library.Sections.Button
+            Section.Slider = Library.Sections.Slider
+            Section.Dropdown = Library.Sections.Dropdown
+            Section.Label = Library.Sections.Label
+            Section.Textbox = Library.Sections.Textbox
+            Section.Searchbox = Library.Sections.Searchbox
 
             return setmetatable(Section, Library.Sections)
         end
@@ -4920,6 +5081,33 @@ local Library do
             end
 
             return NewToggle
+        end
+
+        Library.Sections.Checkbox = function(self, Data)
+            Data = Data or { }
+
+            local Checkbox = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
+
+                Name = Data.Name or Data.name or "Checkbox",
+                Flag = Data.Flag or Data.flag or Library:NextFlag(),
+                Default = Data.Default or Data.default or false,
+                Callback = Data.Callback or Data.callback or function() end,
+            }
+
+            local NewCheckbox = Components:Checkbox({
+                Name = Checkbox.Name,
+                Parent = Checkbox.Section.Items["Content"],
+                Flag = Checkbox.Flag,
+                Default = Checkbox.Default,
+                Page = Checkbox.Page,
+                Section = Checkbox.Section,
+                Callback = Checkbox.Callback
+            })
+
+            return NewCheckbox
         end
 
         Library.Sections.Button = function(self)
