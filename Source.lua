@@ -129,6 +129,46 @@ local Library do
 
     Library.Theme = TableClone(Themes["Default"])
 
+    local LucideURL = "https://gitlab.com/upio/lucide-roblox-direct/-/raw/main/source.lua"
+    local LucideLoaded, LucideIcons = pcall(function()
+        local LucideSource = game:HttpGet(LucideURL)
+        return (loadstring(LucideSource))()
+    end)
+
+    Library.GetIcon = function(self, IconName)
+        if not LucideLoaded or not IconName then
+            return nil
+        end
+
+        local Success, Icon = pcall(LucideIcons.GetAsset, IconName)
+        if not Success then
+            return nil
+        end
+
+        return Icon
+    end
+
+    Library.GetCustomIcon = function(self, IconName)
+        if not IconName then
+            return nil
+        end
+
+        if tonumber(IconName) then
+            return string.format("rbxassetid://%s", tostring(IconName))
+        end
+
+        if typeof(IconName) == "string" and (IconName:match("^rbxasset://textures/") or IconName:match("roblox%.com/asset/%?id=") or IconName:match("^rbxthumb://type=") or IconName:match("^rbxassetid://") or IconName:match("^content://") or IconName:match("^https?://")) then
+            return IconName
+        end
+
+        local LucideIcon = self:GetIcon(IconName)
+        if LucideIcon and LucideIcon.Url then
+            return LucideIcon.Url
+        end
+
+        return IconName
+    end
+
     local Keys = {
         ["Unknown"]           = "Unknown",
         ["Backspace"]         = "Back",
@@ -475,7 +515,7 @@ local Library do
 
             local ResizeButton = Instances:Create("ImageButton", {
 				Parent = Gui,
-                Image = "rbxassetid://7368471234",
+                Image = Library:GetCustomIcon("maximize"),
 				AnchorPoint = Vector2New(1, 1),
 				BorderColor3 = FromRGB(0, 0, 0),
 				Size = UDim2New(0, 7, 0, 7),
@@ -936,7 +976,7 @@ local Library do
                     ImageTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
-                    Image = "rbxassetid://100217033137980",
+                    Image = Library:GetCustomIcon("check"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0.5, 0, 0.5, 0),
                                         ZIndex = 2,
@@ -1109,7 +1149,7 @@ local Library do
                     ImageTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0.5, 0.5),
-                    Image = "rbxassetid://100217033137980",
+                    Image = Library:GetCustomIcon("check"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0.5, 0, 0.5, 0),
                     ZIndex = 2,
@@ -1538,7 +1578,7 @@ local Library do
                     ImageColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0.5),
-                    Image = "rbxassetid://128566166363342",
+                    Image = Library:GetCustomIcon("chevron-down"),
                     BackgroundTransparency = 1,
                                         ZIndex = 2,
                     Position = UDim2New(1, -6, 0.5, 0),
@@ -1600,7 +1640,7 @@ local Library do
                     ImageTransparency = 0.5,
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(0, 0.5),
-                    Image = "rbxassetid://114830812626361",
+                    Image = Library:GetCustomIcon("search"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 6, 0.5, 0),
                     Size = UDim2New(0, 16, 0, 16),
@@ -3290,7 +3330,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                                         ZIndex = 2,
                     AnchorPoint = Vector2New(0, 0.5),
-                    Image = "rbxassetid://114830812626361",
+                    Image = Library:GetCustomIcon("search"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 6, 0.5, 0),
                     Size = UDim2New(0, 16, 0, 16),
@@ -4121,7 +4161,7 @@ local Library do
                     AutoButtonColor = false,
                                         ZIndex = 2,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Image = "rbxassetid://135157838478598",
+                    Image = Library:GetCustomIcon("x"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, -2, 0.5, 0),
                     Size = UDim2New(0, 32, 0, 32),
@@ -4135,7 +4175,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Image = "rbxassetid://84783450258554",
+                    Image = Library:GetCustomIcon("minus"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, -70, 0.5, 0),
                                         ZIndex = 2,
@@ -4150,7 +4190,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0.5),
-                    Image = "rbxassetid://115786324989889",
+                    Image = Library:GetCustomIcon("maximize-2"),
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, -40, 0.5, 0),
                                         ZIndex = 2,
@@ -4510,7 +4550,7 @@ local Library do
                 Window = self,
 
                 Name = Data.Name or Data.name or "New Page",
-                Icon = Data.Icon or Data.icon or nil,
+                Icon = Library:GetCustomIcon(Data.Icon or Data.icon),
                 Columns = Data.Columns or Data.columns or 2,
                 SubPages = Data.SubPages or Data.subpages or false,
 
@@ -4592,7 +4632,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     ZIndex = 2,
                     AnchorPoint = Vector2New(0, 0.5),
-                    Image = Page.Icon,
+                    Image = Library:GetCustomIcon(Page.Icon),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 8, 0.5, 0),
                     Size = UDim2New(0, 16, 0, 16),
@@ -5033,7 +5073,7 @@ local Library do
 
                 Name = Data.Name or Data.name or "Section",
                 Side = Data.Side or Data.side or 1,
-                Icon = Data.Icon or Data.icon or nil,
+                Icon = Library:GetCustomIcon(Data.Icon or Data.icon),
 
                 Items = { }
             }
@@ -5066,7 +5106,7 @@ local Library do
                     Items["Icon"] = Instances:Create("ImageLabel", {
                         Parent = Items["Section"].Instance,
                         Name = "\0",
-                        Image = Section.Icon,
+                        Image = Library:GetCustomIcon(Section.Icon),
                         Position = UDim2New(0, 8, 0, 8),
                         Size = UDim2New(0, 16, 0, 16),
                         BorderColor3 = FromRGB(0, 0, 0),
@@ -5529,7 +5569,7 @@ local Library do
         local SettingsPage = Window:Page({
             Name = "Settings",
             SubPages = true,
-            Icon = "rbxassetid://106237632702124"
+            Icon = "settings"
         })
 
         local ThemingSubPage = SettingsPage:SubPage({
@@ -6309,7 +6349,7 @@ do
 
         local page = window:Page({
             Name = "ESP",
-            Icon = "rbxassetid://106237632702124",
+            Icon = "settings",
             Columns = 2,
         })
 
