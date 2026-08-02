@@ -1294,7 +1294,6 @@ local Library do
                     Parent = Items["Slider"].Instance,
                     Text = "",
                     AutoButtonColor = false,
-                    Active = true,
                     Name = "\0",
                     AnchorPoint = Vector2New(0, 1),
                     Position = UDim2New(0, 0, 1, 0),
@@ -1403,39 +1402,39 @@ local Library do
                 Items["Slider"].Instance.Visible = Bool
             end
 
-            local function SetFromInput(Input)
-                if not Input then
-                    return
-                end
-
-                local sliderInstance = Items["RealSlider"].Instance
-                local width = sliderInstance.AbsoluteSize.X
-                if width <= 0 then
-                    return
-                end
-
-                local sizeX = MathClamp((Input.Position.X - sliderInstance.AbsolutePosition.X) / width, 0, 1)
-                Slider:Set(((Data.Max - Data.Min) * sizeX) + Data.Min)
-            end
-
+            local InputChanged
             Items["RealSlider"]:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     Slider.Sliding = true
-                    SetFromInput(Input)
+
+                    local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
+                    local Value = ((Data.Max - Data.Min) * SizeX) + Data.Min
+
+                    Slider:Set(Value)
+
+                    if InputChanged then
+                        return
+                    end
+
+                    InputChanged = Input.Changed:Connect(function()
+                        if Input.UserInputState == Enum.UserInputState.End then
+                            Slider.Sliding = false
+
+                            InputChanged:Disconnect()
+                            InputChanged = nil
+                        end
+                    end)
                 end
             end)
 
             Library:Connect(UserInputService.InputChanged, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
                     if Slider.Sliding then
-                        SetFromInput(Input)
-                    end
-                end
-            end)
+                        local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
+                        local Value = ((Data.Max - Data.Min) * SizeX) + Data.Min
 
-            Library:Connect(UserInputService.InputEnded, function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    Slider.Sliding = false
+                        Slider:Set(Value)
+                    end
                 end
             end)
 
@@ -6413,9 +6412,6 @@ do
             Max = 10000,
             Decimals = 0,
             Suffix = " studs",
-            Callback = function(value)
-                Library.Flags["ESP_MaxDistance"] = value
-            end,
         })
         behavior:Toggle({
             Name = "Team check",
@@ -6430,7 +6426,22 @@ do
     local OriginalWindow = Library.Window
     Library.Window = function(self, data)
         local window = OriginalWindow(self, data)
-        addESPPage(window)
+        local espPage = addESPPage(window)
+        window.ESPPage = espPage
+        function window:SelectPage(target)
+            if type(target) == "string" then
+                for _, page in self.Pages do
+                    if page.Name == target then
+                        target = page
+                        break
+                    end
+                end
+            end
+
+            for _, page in self.Pages do
+                page:Turn(page == target)
+            end
+        end
         return window
     end
 end
