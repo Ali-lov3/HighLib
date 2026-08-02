@@ -5777,6 +5777,58 @@ do
     local ESPWhite = Color3.fromRGB(255, 255, 255)
     local ESPHealthColor = Color3.fromRGB(65, 220, 110)
 
+    local function ESPToColor(value, fallback)
+        if typeof(value) == "Color3" then
+            return value
+        end
+
+        if type(value) == "table" then
+            if value.Color ~= nil then
+                return ESPToColor(value.Color, fallback)
+            end
+
+            if value.R ~= nil and value.G ~= nil and value.B ~= nil then
+                local red = tonumber(value.R)
+                local green = tonumber(value.G)
+                local blue = tonumber(value.B)
+                if red and green and blue then
+                    if red <= 1 and green <= 1 and blue <= 1 then
+                        return Color3.new(red, green, blue)
+                    end
+                    return Color3.fromRGB(red, green, blue)
+                end
+            end
+
+            if value[1] ~= nil and value[2] ~= nil and value[3] ~= nil then
+                local red = tonumber(value[1])
+                local green = tonumber(value[2])
+                local blue = tonumber(value[3])
+                if red and green and blue then
+                    if red <= 1 and green <= 1 and blue <= 1 then
+                        return Color3.new(red, green, blue)
+                    end
+                    return Color3.fromRGB(red, green, blue)
+                end
+            end
+        end
+
+        if type(value) == "string" then
+            local hex = value
+            if not hex:match("^#") then
+                hex = "#" .. hex
+            end
+
+            local success, color = pcall(function()
+                return Color3.fromHex(hex)
+            end)
+            if success and typeof(color) == "Color3" then
+                return color
+            end
+        end
+
+        return fallback
+    end
+
     local function ESPFlag(name, default)
         local value = Library.Flags[name]
         if value == nil then
@@ -5977,13 +6029,13 @@ do
             local x = top.X - width / 2
             local y = top.Y
             local drawings = entry.Drawings
-            local boxColor = ESPFlag("ESP_BoxColor", ESPBoxColor)
-            local nameColor = ESPFlag("ESP_NameColor", ESPWhite)
-            local distanceColor = ESPFlag("ESP_DistanceColor", ESPWhite)
-            local healthColor = ESPFlag("ESP_HealthColor", ESPHealthColor)
-            local healthTextColor = ESPFlag("ESP_HealthTextColor", ESPWhite)
-            local tracerColor = ESPFlag("ESP_TracerColor", boxColor)
-            local chamsColor = ESPFlag("ESP_ChamsColor", boxColor)
+            local boxColor = ESPToColor(ESPFlag("ESP_BoxColor"), ESPBoxColor)
+            local nameColor = ESPToColor(ESPFlag("ESP_NameColor"), ESPWhite)
+            local distanceColor = ESPToColor(ESPFlag("ESP_DistanceColor"), ESPWhite)
+            local healthColor = ESPToColor(ESPFlag("ESP_HealthColor"), ESPHealthColor)
+            local healthTextColor = ESPToColor(ESPFlag("ESP_HealthTextColor"), ESPWhite)
+            local tracerColor = ESPToColor(ESPFlag("ESP_TracerColor"), boxColor)
+            local chamsColor = ESPToColor(ESPFlag("ESP_ChamsColor"), boxColor)
             local healthRatio = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
             local textSize = math.clamp(math.floor(height / 12), 9, 14)
 
@@ -6034,8 +6086,10 @@ do
             set(drawings.Tracer, "Visible", ESPFlag("ESP_Tracer", false))
 
             if entry.Highlight then
-                entry.Highlight.FillColor = chamsColor
-                entry.Highlight.OutlineColor = chamsColor
+                pcall(function()
+                    entry.Highlight.FillColor = ESPToColor(chamsColor, ESPBoxColor)
+                    entry.Highlight.OutlineColor = ESPToColor(chamsColor, ESPBoxColor)
+                end)
                 entry.Highlight.Enabled = ESPFlag("ESP_Chams", false)
             end
         end
@@ -6097,6 +6151,7 @@ do
         previewBox.Size = UDim2.new(0, 72, 0, 125)
         previewBox.BackgroundColor3 = Color3.fromRGB(255, 72, 72)
         previewBox.BackgroundTransparency = 0.82
+        previewBox.ZIndex = 2
         previewBox.Parent = preview
 
         local previewStroke = Instance.new("UIStroke")
@@ -6111,6 +6166,9 @@ do
         avatar.Size = UDim2.new(0, 58, 0, 112)
         avatar.Image = "rbxassetid://5551922966"
         avatar.ScaleType = Enum.ScaleType.Fit
+        avatar.ImageColor3 = Color3.fromRGB(255, 255, 255)
+        avatar.ImageTransparency = 0
+        avatar.ZIndex = 4
         avatar.Parent = previewBox
 
         local previewName = Instance.new("TextLabel")
@@ -6123,6 +6181,7 @@ do
         previewName.TextColor3 = ESPWhite
         previewName.TextSize = 11
         previewName.TextStrokeTransparency = 0
+        previewName.ZIndex = 5
         previewName.Parent = previewBox
 
         local previewDistance = Instance.new("TextLabel")
@@ -6135,6 +6194,7 @@ do
         previewDistance.TextColor3 = ESPWhite
         previewDistance.TextSize = 10
         previewDistance.TextStrokeTransparency = 0
+        previewDistance.ZIndex = 5
         previewDistance.Parent = previewBox
 
         local previewHealthBack = Instance.new("Frame")
@@ -6142,6 +6202,7 @@ do
         previewHealthBack.Position = UDim2.new(0, -7, 0, 0)
         previewHealthBack.Size = UDim2.new(0, 4, 1, 0)
         previewHealthBack.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        previewHealthBack.ZIndex = 5
         previewHealthBack.Parent = previewBox
 
         local previewHealth = Instance.new("Frame")
@@ -6149,6 +6210,7 @@ do
         previewHealth.Position = UDim2.new(0, 0, 1, 0)
         previewHealth.Size = UDim2.new(1, 0, 0.78, 0)
         previewHealth.BackgroundColor3 = ESPHealthColor
+        previewHealth.ZIndex = 6
         previewHealth.Parent = previewHealthBack
 
         local previewHealthText = Instance.new("TextLabel")
@@ -6161,6 +6223,7 @@ do
         previewHealthText.TextColor3 = ESPWhite
         previewHealthText.TextSize = 10
         previewHealthText.TextStrokeTransparency = 0
+        previewHealthText.ZIndex = 5
         previewHealthText.Parent = previewBox
 
         local previewTracer = Instance.new("Frame")
@@ -6178,7 +6241,7 @@ do
         previewChams.BackgroundColor3 = ESPBoxColor
         previewChams.BackgroundTransparency = 0.84
         previewChams.Visible = false
-        previewChams.ZIndex = 0
+        previewChams.ZIndex = 1
         previewChams.Parent = preview
 
         local function bindPreview(name, callback)
@@ -6211,28 +6274,35 @@ do
             previewChams.Visible = value == true
         end)
         bindPreview("ESP_BoxColor", function(value)
-            if value then
-                previewStroke.Color = value
-                previewBox.BackgroundColor3 = value
+            local color = ESPToColor(value)
+            if color then
+                previewStroke.Color = color
+                previewBox.BackgroundColor3 = color
             end
         end)
         bindPreview("ESP_NameColor", function(value)
-            if value then previewName.TextColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewName.TextColor3 = color end
         end)
         bindPreview("ESP_DistanceColor", function(value)
-            if value then previewDistance.TextColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewDistance.TextColor3 = color end
         end)
         bindPreview("ESP_HealthColor", function(value)
-            if value then previewHealth.BackgroundColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewHealth.BackgroundColor3 = color end
         end)
         bindPreview("ESP_HealthTextColor", function(value)
-            if value then previewHealthText.TextColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewHealthText.TextColor3 = color end
         end)
         bindPreview("ESP_TracerColor", function(value)
-            if value then previewTracer.BackgroundColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewTracer.BackgroundColor3 = color end
         end)
         bindPreview("ESP_ChamsColor", function(value)
-            if value then previewChams.BackgroundColor3 = value end
+            local color = ESPToColor(value)
+            if color then previewChams.BackgroundColor3 = color end
         end)
     end
 
@@ -6243,7 +6313,7 @@ do
 
         local page = window:Page({
             Name = "ESP",
-            Icon = "rbxassetid://5551922966",
+            Icon = "rbxassetid://106237632702124",
             Columns = 2,
         })
 
