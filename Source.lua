@@ -4017,6 +4017,7 @@ local Library do
             local Window = {
                 Name = Data.Name or Data.name or "Window",
                 Logo = Data.Logo or Data.logo or "rbxassetid://127120679730794",
+                ShowTabName = Data.ShowTabName == true or Data.showTabName == true,
 
                 Pages = { },
                 Items = { }
@@ -4399,6 +4400,16 @@ local Library do
                 end
             end
 
+            function Window:SetShowTabName(Bool)
+                Window.ShowTabName = Bool == true
+
+                for _, Page in Window.Pages do
+                    if Page.SetTabNameVisibility then
+                        Page:SetTabNameVisibility(Window.ShowTabName)
+                    end
+                end
+            end
+
             function Window:Minimize(Bool)
                 IsMinimized = Bool
 
@@ -4500,6 +4511,10 @@ local Library do
                     BackgroundColor3 = FromRGB(24, 24, 24)
                 })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Inline"})
 
+                if not Page.Window.ShowTabName then
+                    Items["Inactive"].Instance.Size = UDim2New(0, 35, 0, 35)
+                end
+
                 Instances:Create("UICorner", {
                     Parent = Items["Inactive"].Instance,
                     Name = "\0",
@@ -4539,6 +4554,21 @@ local Library do
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Icon"]:AddToTheme({ImageColor3 = "Image"})
+
+                function Page:SetTabNameVisibility(Bool)
+                    if Bool then
+                        Items["Text"].Instance.Visible = true
+                        Items["Inactive"].Instance.Size = UDim2New(1, 0, 0, 35)
+                        Items["Icon"].Instance.Position = UDim2New(0, 8, 0.5, 0)
+                        Items["Text"].Instance.Position = UDim2New(0, 32, 0.5, 1)
+                    else
+                        Items["Text"].Instance.Visible = false
+                        Items["Inactive"].Instance.Size = UDim2New(0, 35, 0, 35)
+                        Items["Icon"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                    end
+                end
+
+                Page:SetTabNameVisibility(Page.Window.ShowTabName)
 
                 Items["Page"] = Instances:Create("Frame", {
                     Parent = Page.Window.Items["Content"].Instance,
@@ -4819,7 +4849,9 @@ local Library do
                     HorizontalFlex = Enum.UIFlexAlignment.Fill
                 })
 
-                Items["Inactive"].Instance.Size = UDim2New(0, Items["Text"].Instance.TextBounds.X + 20, 1, 0)
+                if Page.Window.ShowTabName then
+                    Items["Inactive"].Instance.Size = UDim2New(0, Items["Text"].Instance.TextBounds.X + 52, 1, 0)
+                end
 
                 for Index = 1, Page.Columns do
                     local NewColumn = Instances:Create("ScrollingFrame", {
