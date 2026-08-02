@@ -4548,6 +4548,25 @@ local Library do
                     CornerRadius = UDimNew(0, 5)
                 })
 
+                Items["Selection"] = Instances:Create("Frame", {
+                    Parent = Items["Inactive"].Instance,
+                    Name = "\0",
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 35, 0, 35),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    ZIndex = 1,
+                    BackgroundColor3 = FromRGB(24, 24, 24)
+                })
+                Items["Selection"]:AddToTheme({BackgroundColor3 = "Inline"})
+
+                Instances:Create("UICorner", {
+                    Parent = Items["Selection"].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(0, 5)
+                })
+
                 Items["Text"] = Instances:Create("TextLabel", {
                     Parent = Items["Inactive"].Instance,
                     Name = "\0",
@@ -4585,13 +4604,27 @@ local Library do
                 function Page:SetTabNameVisibility(Bool)
                     if Bool then
                         Items["Text"].Instance.Visible = true
+                        Items["Selection"].Instance.Visible = false
                         Items["Inactive"].Instance.Size = UDim2New(1, 0, 0, 35)
                         Items["Icon"].Instance.Position = UDim2New(0, 8, 0.5, 0)
                         Items["Text"].Instance.Position = UDim2New(0, 32, 0.5, 1)
                     else
                         Items["Text"].Instance.Visible = false
-                        Items["Inactive"].Instance.Size = UDim2New(0, 35, 0, 35)
+                        Items["Selection"].Instance.Visible = true
+                        Items["Inactive"].Instance.Size = UDim2New(1, 0, 0, 35)
+                        Items["Selection"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                        Items["Selection"].Instance.Size = UDim2New(0, 35, 0, 35)
                         Items["Icon"].Instance.Position = UDim2New(0.5, 0, 0.5, 0)
+                    end
+
+                    if Page.Active then
+                        if Bool then
+                            Items["Inactive"].Instance.BackgroundTransparency = 0
+                            Items["Selection"].Instance.BackgroundTransparency = 1
+                        else
+                            Items["Inactive"].Instance.BackgroundTransparency = 1
+                            Items["Selection"].Instance.BackgroundTransparency = 0
+                        end
                     end
                 end
 
@@ -4722,12 +4755,19 @@ local Library do
                     Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
                     Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
                     Items["Text"]:Tween(nil, {TextTransparency = 0})
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0})
+                    if Page.Window.ShowTabName then
+                        Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0})
+                        Items["Selection"]:Tween(nil, {BackgroundTransparency = 1})
+                    else
+                        Items["Inactive"]:Tween(nil, {BackgroundTransparency = 1})
+                        Items["Selection"]:Tween(nil, {BackgroundTransparency = 0})
+                    end
                 else
                     Items["Icon"]:ChangeItemTheme({ImageColor3 = "Image"})
                     Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Image, ImageTransparency = 0.5})
                     Items["Text"]:Tween(nil, {TextTransparency = 0.5})
                     Items["Inactive"]:Tween(nil, {BackgroundTransparency = 1})
+                    Items["Selection"]:Tween(nil, {BackgroundTransparency = 1})
                 end
 
                 local Descendants = Items["Page"].Instance:GetDescendants()
