@@ -3656,8 +3656,8 @@ local Library do
                 Items["Watermark"] = Instances:Create("Frame", {
                     Parent = Library.Holder.Instance,
                     Name = "\0",
-                    AnchorPoint = Vector2New(0.5, 0),
-                    Position = UDim2New(0.5, 0, 0, 20),
+                    AnchorPoint = Vector2New(1, 0),
+                    Position = UDim2New(1, -20, 0, 20),
                     Size = UDim2New(0, 270, 0, 54),
                     BorderColor3 = FromRGB(0, 0, 0),
                     BorderSizePixel = 0,
@@ -5824,6 +5824,7 @@ do
     local ESPBoxColor = Color3.fromRGB(255, 255, 255)
     local ESPWhite = Color3.fromRGB(255, 255, 255)
     local ESPHealthColor = Color3.fromRGB(65, 220, 110)
+    local ESPUpdateInterval = 1 / 30
 
     local function ESPToColor(value, fallback)
         if typeof(value) == "Color3" then
@@ -6043,7 +6044,32 @@ do
         end
 
         local maxDistance = ESPFlag("ESP_MaxDistance", 2500)
+        local maxDistanceSquared = maxDistance * maxDistance
         local teamCheck = ESPFlag("ESP_TeamCheck", false)
+        local showBox = ESPFlag("ESP_Box", true)
+        local showHealthBar = ESPFlag("ESP_HealthBar", true)
+        local showHealthText = ESPFlag("ESP_HealthText", true)
+        local showName = ESPFlag("ESP_Name", true)
+        local showDistance = ESPFlag("ESP_Distance", true)
+        local showTracer = ESPFlag("ESP_Tracer", false)
+        local showChams = ESPFlag("ESP_Chams", false)
+        local boxColor = ESPToColor(ESPFlag("ESP_BoxColor"), ESPBoxColor)
+        local nameColor = ESPToColor(ESPFlag("ESP_NameColor"), ESPWhite)
+        local distanceColor = ESPToColor(ESPFlag("ESP_DistanceColor"), ESPWhite)
+        local healthColor = ESPToColor(ESPFlag("ESP_HealthColor"), ESPHealthColor)
+        local healthTextColor = ESPToColor(ESPFlag("ESP_HealthTextColor"), ESPWhite)
+        local tracerColor = ESPToColor(ESPFlag("ESP_TracerColor"), boxColor)
+        local chamsColor = ESPToColor(ESPFlag("ESP_ChamsColor"), boxColor)
+        local cameraPosition = camera.CFrame.Position
+        local viewportCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+
+        local function set(object, property, value)
+            if object then
+                pcall(function()
+                    object[property] = value
+                end)
+            end
+        end
 
         for player, entry in ESPState.Cache do
             local character = ESPState.Characters[player]
@@ -6055,7 +6081,10 @@ do
                 valid = false
             end
 
-            if valid and (camera.CFrame.Position - root.Position).Magnitude > maxDistance then
+            local distanceVector = valid and (cameraPosition - root.Position)
+            local distanceSquared = distanceVector and distanceVector:Dot(distanceVector)
+
+            if valid and distanceSquared > maxDistanceSquared then
                 valid = false
             end
 
@@ -6077,73 +6106,67 @@ do
             local x = top.X - width / 2
             local y = top.Y
             local drawings = entry.Drawings
-            local boxColor = ESPToColor(ESPFlag("ESP_BoxColor"), ESPBoxColor)
-            local nameColor = ESPToColor(ESPFlag("ESP_NameColor"), ESPWhite)
-            local distanceColor = ESPToColor(ESPFlag("ESP_DistanceColor"), ESPWhite)
-            local healthColor = ESPToColor(ESPFlag("ESP_HealthColor"), ESPHealthColor)
-            local healthTextColor = ESPToColor(ESPFlag("ESP_HealthTextColor"), ESPWhite)
-            local tracerColor = ESPToColor(ESPFlag("ESP_TracerColor"), boxColor)
-            local chamsColor = ESPToColor(ESPFlag("ESP_ChamsColor"), boxColor)
             local healthRatio = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
             local textSize = math.clamp(math.floor(height / 12), 9, 14)
-
-            local function set(object, property, value)
-                if object then
-                    pcall(function()
-                        object[property] = value
-                    end)
-                end
-            end
 
             set(drawings.Box, "Position", Vector2.new(x, y))
             set(drawings.Box, "Size", Vector2.new(width, height))
             set(drawings.Box, "Color", boxColor)
-            set(drawings.Box, "Visible", ESPFlag("ESP_Box", true))
+            set(drawings.Box, "Visible", showBox)
 
             local healthX = x - 5
             set(drawings.HealthBack, "From", Vector2.new(healthX, y))
             set(drawings.HealthBack, "To", Vector2.new(healthX, y + height))
-            set(drawings.HealthBack, "Visible", ESPFlag("ESP_HealthBar", true))
+            set(drawings.HealthBack, "Visible", showHealthBar)
 
             set(drawings.Health, "From", Vector2.new(healthX, y + height))
             set(drawings.Health, "To", Vector2.new(healthX, y + height - height * healthRatio))
             set(drawings.Health, "Color", healthColor)
-            set(drawings.Health, "Visible", ESPFlag("ESP_HealthBar", true))
+            set(drawings.Health, "Visible", showHealthBar)
 
             set(drawings.HealthText, "Text", tostring(math.floor(humanoid.Health)))
             set(drawings.HealthText, "Size", textSize)
             set(drawings.HealthText, "Color", healthTextColor)
             set(drawings.HealthText, "Position", Vector2.new(healthX - 18, y + height - height * healthRatio))
-            set(drawings.HealthText, "Visible", ESPFlag("ESP_HealthText", true))
+            set(drawings.HealthText, "Visible", showHealthText)
 
             set(drawings.Name, "Text", player.Name)
             set(drawings.Name, "Size", textSize)
             set(drawings.Name, "Color", nameColor)
             set(drawings.Name, "Position", Vector2.new(x + width / 2, y - textSize - 3))
-            set(drawings.Name, "Visible", ESPFlag("ESP_Name", true))
+            set(drawings.Name, "Visible", showName)
 
-            set(drawings.Distance, "Text", tostring(math.floor((camera.CFrame.Position - root.Position).Magnitude)) .. " studs")
+            set(drawings.Distance, "Text", tostring(math.floor(math.sqrt(distanceSquared))) .. " studs")
             set(drawings.Distance, "Size", textSize)
             set(drawings.Distance, "Color", distanceColor)
             set(drawings.Distance, "Position", Vector2.new(x + width / 2, y + height + 2))
-            set(drawings.Distance, "Visible", ESPFlag("ESP_Distance", true))
+            set(drawings.Distance, "Visible", showDistance)
 
-            set(drawings.Tracer, "From", Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y))
+            set(drawings.Tracer, "From", viewportCenter)
             set(drawings.Tracer, "To", Vector2.new(x + width / 2, y + height))
             set(drawings.Tracer, "Color", tracerColor)
-            set(drawings.Tracer, "Visible", ESPFlag("ESP_Tracer", false))
+            set(drawings.Tracer, "Visible", showTracer)
 
             if entry.Highlight then
                 pcall(function()
                     entry.Highlight.FillColor = ESPToColor(chamsColor, ESPBoxColor)
                     entry.Highlight.OutlineColor = ESPToColor(chamsColor, ESPBoxColor)
                 end)
-                entry.Highlight.Enabled = ESPFlag("ESP_Chams", false)
+                entry.Highlight.Enabled = showChams
             end
         end
     end
 
-    ESPRunService.RenderStepped:Connect(ESPUpdate)
+    local ESPElapsed = ESPUpdateInterval
+    ESPRunService.RenderStepped:Connect(function(deltaTime)
+        ESPElapsed += deltaTime
+        if ESPElapsed < ESPUpdateInterval then
+            return
+        end
+
+        ESPElapsed = 0
+        ESPUpdate()
+    end)
 
     local function notifyESPPreview(name, value)
         local callback = ESPState.PreviewCallbacks[name]
