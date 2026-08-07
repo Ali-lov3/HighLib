@@ -5824,9 +5824,7 @@ do
     local ESPBoxColor = Color3.fromRGB(255, 255, 255)
     local ESPWhite = Color3.fromRGB(255, 255, 255)
     local ESPHealthColor = Color3.fromRGB(65, 220, 110)
-    local ESPBlack = Color3.new(0, 0, 0)
     local ESPUpdateInterval = 1 / 30
-    local ESPSmoothness = 16
 
     local function ESPToColor(value, fallback)
         if typeof(value) == "Color3" then
@@ -5916,7 +5914,6 @@ do
     end
 
     local function ESPHide(entry)
-        entry.Target = nil
         for _, object in entry.Drawings do
             if object then
                 object.Visible = false
@@ -5928,63 +5925,6 @@ do
         end
     end
 
-    local function ESPGetEquippedWeapon(character)
-        if not character then
-            return "None"
-        end
-
-        for _, child in character:GetChildren() do
-            if child.ClassName == "Tool" then
-                return child.Name
-            end
-        end
-
-        return "None"
-    end
-
-    local function ESPGetBackpackItems(player)
-        local success, result = pcall(function()
-            if not player then
-                return "Empty"
-            end
-
-            local backpack = player:FindFirstChild("Backpack")
-            if not backpack then
-                return "Empty"
-            end
-
-            local names = {}
-            local children = backpack:GetChildren()
-            for index = 1, #children do
-                local child = children[index]
-                if child and child.ClassName == "Tool" then
-                    names[#names + 1] = tostring(child.Name)
-                end
-            end
-
-            if #names == 0 then
-                return "Empty"
-            end
-
-            local text = names[1]
-            for index = 2, #names do
-                text = text .. ", " .. names[index]
-            end
-
-            if #text > 32 then
-                text = string.sub(text, 1, 29) .. "..."
-            end
-
-            return text
-        end)
-
-        if success and type(result) == "string" then
-            return result
-        end
-
-        return "Empty"
-    end
-
     local function ESPCreatePlayer(player)
         if player == ESPLocalPlayer or ESPState.Cache[player] then
             return
@@ -5992,8 +5932,6 @@ do
 
         local entry = {
             Player = player,
-            Target = nil,
-            Smooth = {},
             Drawings = {
                 Box = ESPDrawing("Square", {
                     Visible = false,
@@ -6001,22 +5939,10 @@ do
                     Thickness = 1,
                     Color = ESPBoxColor,
                 }),
-                OuterOutline = ESPDrawing("Square", {
-                    Visible = false,
-                    Filled = false,
-                    Thickness = 1,
-                    Color = ESPBlack,
-                }),
-                InnerOutline = ESPDrawing("Square", {
-                    Visible = false,
-                    Filled = false,
-                    Thickness = 1,
-                    Color = ESPWhite,
-                }),
                 HealthBack = ESPDrawing("Line", {
                     Visible = false,
                     Thickness = 3,
-                    Color = ESPBlack,
+                    Color = Color3.fromRGB(0, 0, 0),
                 }),
                 Health = ESPDrawing("Line", {
                     Visible = false,
@@ -6036,18 +5962,6 @@ do
                     Color = ESPWhite,
                 }),
                 Distance = ESPDrawing("Text", {
-                    Visible = false,
-                    Center = true,
-                    Outline = true,
-                    Color = ESPWhite,
-                }),
-                Weapon = ESPDrawing("Text", {
-                    Visible = false,
-                    Center = true,
-                    Outline = true,
-                    Color = ESPWhite,
-                }),
-                Backpack = ESPDrawing("Text", {
                     Visible = false,
                     Center = true,
                     Outline = true,
@@ -6139,11 +6053,6 @@ do
         local showDistance = ESPFlag("ESP_Distance", true)
         local showTracer = ESPFlag("ESP_Tracer", false)
         local showChams = ESPFlag("ESP_Chams", false)
-        local showWeapon = ESPFlag("ESP_Weapon", false)
-        local showBackpack = ESPFlag("ESP_Backpack", false)
-        local showOutline = ESPFlag("ESP_Outline", true)
-        local showInnerOutline = ESPFlag("ESP_InnerOutline", true)
-        local showOuterOutline = ESPFlag("ESP_OuterOutline", true)
         local boxColor = ESPToColor(ESPFlag("ESP_BoxColor"), ESPBoxColor)
         local nameColor = ESPToColor(ESPFlag("ESP_NameColor"), ESPWhite)
         local distanceColor = ESPToColor(ESPFlag("ESP_DistanceColor"), ESPWhite)
@@ -6199,157 +6108,64 @@ do
             local drawings = entry.Drawings
             local healthRatio = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
             local textSize = math.clamp(math.floor(height / 12), 9, 14)
-            local target = {
-                X = x,
-                Y = y,
-                Width = width,
-                Height = height,
-                HealthRatio = healthRatio,
-                Distance = math.floor(math.sqrt(distanceSquared)),
-                Health = math.floor(humanoid.Health),
-                TextSize = textSize,
-                Name = player.Name,
-                Weapon = ESPGetEquippedWeapon(character),
-                Backpack = ESPGetBackpackItems(player),
-                BoxColor = boxColor,
-                NameColor = nameColor,
-                DistanceColor = distanceColor,
-                HealthColor = healthColor,
-                HealthTextColor = healthTextColor,
-                TracerColor = tracerColor,
-                ChamsColor = chamsColor,
-                ShowBox = showBox,
-                ShowHealthBar = showHealthBar,
-                ShowHealthText = showHealthText,
-                ShowName = showName,
-                ShowDistance = showDistance,
-                ShowTracer = showTracer,
-                ShowChams = showChams,
-                ShowWeapon = showWeapon,
-                ShowBackpack = showBackpack,
-                ShowOutline = showOutline,
-                ShowInnerOutline = showInnerOutline,
-                ShowOuterOutline = showOuterOutline,
-            }
 
-            entry.Target = target
-        end
-    end
+            set(drawings.Box, "Position", Vector2.new(x, y))
+            set(drawings.Box, "Size", Vector2.new(width, height))
+            set(drawings.Box, "Color", boxColor)
+            set(drawings.Box, "Visible", showBox)
 
-    local function ESPApplySmooth(entry, alpha, viewportCenter)
-        local target = entry.Target
-        if not target then
-            return
-        end
+            local healthX = x - 5
+            set(drawings.HealthBack, "From", Vector2.new(healthX, y))
+            set(drawings.HealthBack, "To", Vector2.new(healthX, y + height))
+            set(drawings.HealthBack, "Visible", showHealthBar)
 
-        local smooth = entry.Smooth
-        local function lerpNumber(name, value)
-            smooth[name] = smooth[name] == nil and value or smooth[name] + (value - smooth[name]) * alpha
-            return smooth[name]
-        end
+            set(drawings.Health, "From", Vector2.new(healthX, y + height))
+            set(drawings.Health, "To", Vector2.new(healthX, y + height - height * healthRatio))
+            set(drawings.Health, "Color", healthColor)
+            set(drawings.Health, "Visible", showHealthBar)
 
-        local x = lerpNumber("X", target.X)
-        local y = lerpNumber("Y", target.Y)
-        local width = lerpNumber("Width", target.Width)
-        local height = lerpNumber("Height", target.Height)
-        local healthRatio = lerpNumber("HealthRatio", target.HealthRatio)
-        local center = Vector2.new(x + width / 2, y + height / 2)
-        local healthX = x - 5
-        local drawings = entry.Drawings
+            set(drawings.HealthText, "Text", tostring(math.floor(humanoid.Health)))
+            set(drawings.HealthText, "Size", textSize)
+            set(drawings.HealthText, "Color", healthTextColor)
+            set(drawings.HealthText, "Position", Vector2.new(healthX - 18, y + height - height * healthRatio))
+            set(drawings.HealthText, "Visible", showHealthText)
 
-        local function set(object, property, value)
-            if object then
+            set(drawings.Name, "Text", player.Name)
+            set(drawings.Name, "Size", textSize)
+            set(drawings.Name, "Color", nameColor)
+            set(drawings.Name, "Position", Vector2.new(x + width / 2, y - textSize - 3))
+            set(drawings.Name, "Visible", showName)
+
+            set(drawings.Distance, "Text", tostring(math.floor(math.sqrt(distanceSquared))) .. " studs")
+            set(drawings.Distance, "Size", textSize)
+            set(drawings.Distance, "Color", distanceColor)
+            set(drawings.Distance, "Position", Vector2.new(x + width / 2, y + height + 2))
+            set(drawings.Distance, "Visible", showDistance)
+
+            set(drawings.Tracer, "From", viewportCenter)
+            set(drawings.Tracer, "To", Vector2.new(x + width / 2, y + height))
+            set(drawings.Tracer, "Color", tracerColor)
+            set(drawings.Tracer, "Visible", showTracer)
+
+            if entry.Highlight then
                 pcall(function()
-                    object[property] = value
+                    entry.Highlight.FillColor = ESPToColor(chamsColor, ESPBoxColor)
+                    entry.Highlight.OutlineColor = ESPToColor(chamsColor, ESPBoxColor)
                 end)
+                entry.Highlight.Enabled = showChams
             end
-        end
-
-        set(drawings.Box, "Position", Vector2.new(x, y))
-        set(drawings.Box, "Size", Vector2.new(width, height))
-        set(drawings.Box, "Color", target.BoxColor)
-        set(drawings.Box, "Visible", target.ShowBox)
-
-        set(drawings.OuterOutline, "Position", Vector2.new(x - 1, y - 1))
-        set(drawings.OuterOutline, "Size", Vector2.new(width + 2, height + 2))
-        set(drawings.OuterOutline, "Color", ESPBlack)
-        set(drawings.OuterOutline, "Visible", target.ShowBox and target.ShowOutline and target.ShowOuterOutline)
-
-        set(drawings.InnerOutline, "Position", Vector2.new(x + 1, y + 1))
-        set(drawings.InnerOutline, "Size", Vector2.new(math.max(width - 2, 1), math.max(height - 2, 1)))
-        set(drawings.InnerOutline, "Color", target.BoxColor)
-        set(drawings.InnerOutline, "Visible", target.ShowBox and target.ShowOutline and target.ShowInnerOutline)
-
-        set(drawings.HealthBack, "From", Vector2.new(healthX, y))
-        set(drawings.HealthBack, "To", Vector2.new(healthX, y + height))
-        set(drawings.HealthBack, "Visible", target.ShowHealthBar)
-
-        set(drawings.Health, "From", Vector2.new(healthX, y + height))
-        set(drawings.Health, "To", Vector2.new(healthX, y + height - height * healthRatio))
-        set(drawings.Health, "Color", target.HealthColor)
-        set(drawings.Health, "Visible", target.ShowHealthBar)
-
-        set(drawings.HealthText, "Text", tostring(target.Health))
-        set(drawings.HealthText, "Size", target.TextSize)
-        set(drawings.HealthText, "Color", target.HealthTextColor)
-        set(drawings.HealthText, "Position", Vector2.new(healthX - 18, y + height - height * healthRatio))
-        set(drawings.HealthText, "Visible", target.ShowHealthText)
-
-        local topTextY = y - target.TextSize - 3
-        set(drawings.Name, "Text", target.Name)
-        set(drawings.Name, "Size", target.TextSize)
-        set(drawings.Name, "Color", target.NameColor)
-        set(drawings.Name, "Position", Vector2.new(center.X, topTextY))
-        set(drawings.Name, "Visible", target.ShowName)
-
-        set(drawings.Weapon, "Text", "Weapon: " .. target.Weapon)
-        set(drawings.Weapon, "Size", target.TextSize)
-        set(drawings.Weapon, "Color", ESPWhite)
-        set(drawings.Weapon, "Position", Vector2.new(center.X, topTextY - target.TextSize - 2))
-        set(drawings.Weapon, "Visible", target.ShowWeapon)
-
-        set(drawings.Backpack, "Text", "Backpack: " .. target.Backpack)
-        set(drawings.Backpack, "Size", target.TextSize)
-        set(drawings.Backpack, "Color", ESPWhite)
-        set(drawings.Backpack, "Position", Vector2.new(center.X, topTextY - (target.TextSize * 2) - 4))
-        set(drawings.Backpack, "Visible", target.ShowBackpack)
-
-        set(drawings.Distance, "Text", tostring(target.Distance) .. " studs")
-        set(drawings.Distance, "Size", target.TextSize)
-        set(drawings.Distance, "Color", target.DistanceColor)
-        set(drawings.Distance, "Position", Vector2.new(center.X, y + height + 2))
-        set(drawings.Distance, "Visible", target.ShowDistance)
-
-        set(drawings.Tracer, "From", viewportCenter)
-        set(drawings.Tracer, "To", Vector2.new(center.X, y + height))
-        set(drawings.Tracer, "Color", target.TracerColor)
-        set(drawings.Tracer, "Visible", target.ShowTracer)
-
-        if entry.Highlight then
-            pcall(function()
-                entry.Highlight.FillColor = target.ChamsColor
-                entry.Highlight.OutlineColor = target.ChamsColor
-                entry.Highlight.Enabled = target.ShowChams
-            end)
         end
     end
 
     local ESPElapsed = ESPUpdateInterval
     ESPRunService.RenderStepped:Connect(function(deltaTime)
         ESPElapsed += deltaTime
-        if ESPElapsed >= ESPUpdateInterval then
-            ESPElapsed = 0
-            ESPUpdate()
+        if ESPElapsed < ESPUpdateInterval then
+            return
         end
 
-        local camera = workspace.CurrentCamera
-        if camera then
-            local alpha = math.clamp(1 - math.exp(-ESPSmoothness * deltaTime), 0, 1)
-            local viewportCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-            for _, entry in ESPState.Cache do
-                ESPApplySmooth(entry, alpha, viewportCenter)
-            end
-        end
+        ESPElapsed = 0
+        ESPUpdate()
     end)
 
     local function notifyESPPreview(name, value)
@@ -6404,7 +6220,7 @@ do
         previewBox.AnchorPoint = Vector2.new(0.5, 0.5)
         previewBox.Position = UDim2.new(0.5, 0, 0.57, 0)
         previewBox.Size = UDim2.new(0, 72, 0, 125)
-        previewBox.BackgroundColor3 = ESPBoxColor
+        previewBox.BackgroundColor3 = Color3.fromRGB(255, 72, 72)
         previewBox.BackgroundTransparency = 0.82
         previewBox.ZIndex = 2
         previewBox.Parent = preview
@@ -6662,31 +6478,6 @@ do
         local behavior = page:Section({
             Name = "Behavior",
             Side = 2,
-        })
-        visuals:Toggle({
-            Name = "Weapon",
-            Flag = "ESP_Weapon",
-            Default = false,
-        })
-        visuals:Toggle({
-            Name = "Backpack",
-            Flag = "ESP_Backpack",
-            Default = false,
-        })
-        visuals:Toggle({
-            Name = "Outline",
-            Flag = "ESP_Outline",
-            Default = true,
-        })
-        visuals:Toggle({
-            Name = "Inner outline",
-            Flag = "ESP_InnerOutline",
-            Default = true,
-        })
-        visuals:Toggle({
-            Name = "Outer outline",
-            Flag = "ESP_OuterOutline",
-            Default = true,
         })
         behavior:Slider({
             Name = "Max distance",
