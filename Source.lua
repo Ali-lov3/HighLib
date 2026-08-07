@@ -5943,27 +5943,46 @@ do
     end
 
     local function ESPGetBackpackItems(player)
-        local backpack = player and player:FindFirstChild("Backpack")
-        if not backpack then
-            return "Empty"
-        end
-
-        local items = {}
-        for _, child in backpack:GetChildren() do
-            if child.ClassName == "Tool" then
-                TableInsert(items, child.Name)
+        local success, result = pcall(function()
+            if not player then
+                return "Empty"
             end
+
+            local backpack = player:FindFirstChild("Backpack")
+            if not backpack then
+                return "Empty"
+            end
+
+            local names = {}
+            local children = backpack:GetChildren()
+            for index = 1, #children do
+                local child = children[index]
+                if child and child.ClassName == "Tool" then
+                    names[#names + 1] = tostring(child.Name)
+                end
+            end
+
+            if #names == 0 then
+                return "Empty"
+            end
+
+            local text = names[1]
+            for index = 2, #names do
+                text = text .. ", " .. names[index]
+            end
+
+            if #text > 32 then
+                text = string.sub(text, 1, 29) .. "..."
+            end
+
+            return text
+        end)
+
+        if success and type(result) == "string" then
+            return result
         end
 
-        if #items == 0 then
-            return "Empty"
-        end
-
-        local result = TableConcat(items, ", ")
-        if StringLen(result) > 32 then
-            result = StringSub(result, 1, 29) .. "..."
-        end
-        return result
+        return "Empty"
     end
 
     local function ESPCreatePlayer(player)
