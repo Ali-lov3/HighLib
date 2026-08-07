@@ -5824,6 +5824,7 @@ do
     local ESPBoxColor = Color3.fromRGB(255, 255, 255)
     local ESPWhite = Color3.fromRGB(255, 255, 255)
     local ESPHealthColor = Color3.fromRGB(65, 220, 110)
+    local ESPBlack = Color3.new(0, 0, 0)
     local ESPUpdateInterval = 1 / 30
     local ESPSmoothness = 16
 
@@ -5933,7 +5934,7 @@ do
         end
 
         for _, child in character:GetChildren() do
-            if child:IsA("Tool") then
+            if child.ClassName == "Tool" then
                 return child.Name
             end
         end
@@ -5942,14 +5943,14 @@ do
     end
 
     local function ESPGetBackpackItems(player)
-        local backpack = player and player:FindFirstChildOfClass("Backpack")
+        local backpack = player and player:FindFirstChild("Backpack")
         if not backpack then
             return "Empty"
         end
 
         local items = {}
         for _, child in backpack:GetChildren() do
-            if child:IsA("Tool") then
+            if child.ClassName == "Tool" then
                 TableInsert(items, child.Name)
             end
         end
@@ -5985,7 +5986,7 @@ do
                     Visible = false,
                     Filled = false,
                     Thickness = 1,
-                    Color = FromRGB(0, 0, 0),
+                    Color = ESPBlack,
                 }),
                 InnerOutline = ESPDrawing("Square", {
                     Visible = false,
@@ -5996,7 +5997,7 @@ do
                 HealthBack = ESPDrawing("Line", {
                     Visible = false,
                     Thickness = 3,
-                    Color = Color3.fromRGB(0, 0, 0),
+                    Color = ESPBlack,
                 }),
                 Health = ESPDrawing("Line", {
                     Visible = false,
@@ -6121,7 +6122,6 @@ do
         local showChams = ESPFlag("ESP_Chams", false)
         local showWeapon = ESPFlag("ESP_Weapon", false)
         local showBackpack = ESPFlag("ESP_Backpack", false)
-        local cleanMode = ESPFlag("ESP_Clean", false)
         local showOutline = ESPFlag("ESP_Outline", true)
         local showInnerOutline = ESPFlag("ESP_InnerOutline", true)
         local showOuterOutline = ESPFlag("ESP_OuterOutline", true)
@@ -6204,10 +6204,10 @@ do
                 ShowHealthText = showHealthText,
                 ShowName = showName,
                 ShowDistance = showDistance,
-                ShowTracer = showTracer and not cleanMode,
+                ShowTracer = showTracer,
                 ShowChams = showChams,
-                ShowWeapon = showWeapon and not cleanMode,
-                ShowBackpack = showBackpack and not cleanMode,
+                ShowWeapon = showWeapon,
+                ShowBackpack = showBackpack,
                 ShowOutline = showOutline,
                 ShowInnerOutline = showInnerOutline,
                 ShowOuterOutline = showOuterOutline,
@@ -6253,7 +6253,7 @@ do
 
         set(drawings.OuterOutline, "Position", Vector2.new(x - 1, y - 1))
         set(drawings.OuterOutline, "Size", Vector2.new(width + 2, height + 2))
-        set(drawings.OuterOutline, "Color", FromRGB(0, 0, 0))
+        set(drawings.OuterOutline, "Color", ESPBlack)
         set(drawings.OuterOutline, "Visible", target.ShowBox and target.ShowOutline and target.ShowOuterOutline)
 
         set(drawings.InnerOutline, "Position", Vector2.new(x + 1, y + 1))
@@ -6652,11 +6652,6 @@ do
         visuals:Toggle({
             Name = "Backpack",
             Flag = "ESP_Backpack",
-            Default = false,
-        })
-        visuals:Toggle({
-            Name = "Clean",
-            Flag = "ESP_Clean",
             Default = false,
         })
         visuals:Toggle({
